@@ -65,6 +65,30 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Auto-Relink Check
+  // If the user previously subscribed, unsubscribed, and is now re-subscribing,
+  // we can safely auto-reconnect them to their exact old manual record!
+  const priorRecord = await ProviderCustomer.findOne({
+    providerId: provider._id,
+    status: "unlinked",
+    previousUserId: session.user.id,
+  });
+
+  if (priorRecord) {
+    // Relink!
+    priorRecord.userId = session.user.id as any;
+    priorRecord.status = "linked";
+    priorRecord.tiffinStatus = "active";
+    priorRecord.previousUserId = null as any; // clear it
+    await priorRecord.save();
+
+    return NextResponse.json({
+      record: priorRecord,
+      warning: null,
+      potentialDuplicates: [],
+    }, { status: 201 });
+  }
+
   // Create the linked record
   const record = await ProviderCustomer.create({
     providerId: provider._id,

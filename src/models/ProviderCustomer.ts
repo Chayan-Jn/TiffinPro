@@ -58,6 +58,11 @@ const ProviderCustomerSchema = new Schema<IProviderCustomer>(
       enum: ["active", "on_hold"],
       default: "active",
     },
+    previousUserId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
     notes: {
       type: String,
       default: "",

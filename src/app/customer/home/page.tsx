@@ -132,7 +132,8 @@ function FindProviderModal({ onClose, onAdded, username }: {
 }
 
 // ─── Provider Details Modal (Menu + Plan) ───
-function ProviderDetailsModal({ record, onClose }: { record: ProviderRecord, onClose: () => void }) {
+function ProviderDetailsModal({ record, initialTab, onClose }: { record: ProviderRecord, initialTab: "today" | "full", onClose: () => void }) {
+  const [tab, setTab] = useState<"today" | "full">(initialTab);
   const [menuImg, setMenuImg] = useState("");
   const [dailyMenu, setDailyMenu] = useState<DailyMenuItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -169,7 +170,16 @@ function ProviderDetailsModal({ record, onClose }: { record: ProviderRecord, onC
           <button onClick={onClose} style={closeBtnStyle}>✕</button>
         </div>
 
-        <div style={{ padding: "2rem", overflowY: "auto", display: "flex", flexDirection: "column", gap: "2rem" }}>
+        <div style={{ display: "flex", borderBottom: "1px solid var(--border)", background: "var(--surface-1)" }}>
+          <button onClick={() => setTab("today")} style={{ flex: 1, padding: "0.8rem", border: "none", background: tab === "today" ? "var(--surface-2)" : "transparent", borderBottom: tab === "today" ? "2px solid var(--brand-orange)" : "none", color: tab === "today" ? "var(--brand-orange)" : "var(--text-secondary)", fontWeight: 700, cursor: "pointer", transition: "all 0.2s" }}>
+            🍽️ Today's Menu
+          </button>
+          <button onClick={() => setTab("full")} style={{ flex: 1, padding: "0.8rem", border: "none", background: tab === "full" ? "var(--surface-2)" : "transparent", borderBottom: tab === "full" ? "2px solid var(--brand-orange)" : "none", color: tab === "full" ? "var(--text-primary)" : "var(--text-secondary)", fontWeight: 700, cursor: "pointer", transition: "all 0.2s" }}>
+            📖 Full Menu
+          </button>
+        </div>
+
+        <div style={{ padding: "2rem", overflowY: "auto", scrollbarWidth: "none", msOverflowStyle: "none", display: "flex", flexDirection: "column", gap: "2rem" }}>
           
           {/* Plan Overdue Warning */}
           {isOverdue && (
@@ -182,38 +192,40 @@ function ProviderDetailsModal({ record, onClose }: { record: ProviderRecord, onC
             </div>
           )}
 
-          {/* Today's Menu */}
-          <div>
-            <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "1rem", color: "var(--brand-orange)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <span>🍽️</span> Today&apos;s Menu
-            </h3>
-            {loading ? (
-              <p style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>Loading menu...</p>
-            ) : dailyMenu.length === 0 ? (
-              <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", fontStyle: "italic", background: "var(--surface-2)", padding: "1rem", borderRadius: "var(--radius-md)", border: "1px dashed var(--border)" }}>Provider hasn&apos;t added today&apos;s menu yet.</p>
-            ) : (
-              <div style={{ display: "grid", gap: "0.75rem" }}>
-                {dailyMenu.map((m, i) => (
-                  <div key={i} style={{ background: "var(--surface-2)", padding: "1rem", borderRadius: "var(--radius-md)", border: "1px solid var(--border)" }}>
-                    <div style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-secondary)", marginBottom: "0.4rem" }}>{m.mealName}</div>
-                    <div style={{ color: "var(--text-primary)", fontWeight: 500 }}>{m.description}</div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          {tab === "today" && (
+            <div>
+              <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "1rem", color: "var(--text-primary)" }}>
+                What's for today?
+              </h3>
+              {loading ? (
+                <p style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>Loading menu...</p>
+              ) : dailyMenu.length === 0 ? (
+                <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", fontStyle: "italic", background: "var(--surface-2)", padding: "1rem", borderRadius: "var(--radius-md)", border: "1px dashed var(--border)" }}>Provider hasn&apos;t added today&apos;s menu yet.</p>
+              ) : (
+                <div style={{ display: "grid", gap: "0.75rem" }}>
+                  {dailyMenu.map((m, i) => (
+                    <div key={i} style={{ background: "var(--surface-2)", padding: "1rem", borderRadius: "var(--radius-md)", border: "1px solid var(--border)" }}>
+                      <div style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-secondary)", marginBottom: "0.4rem" }}>{m.mealName}</div>
+                      <div style={{ color: "var(--text-primary)", fontWeight: 500 }}>{m.description}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
-          {/* Static Mess Menu */}
-          <div>
-            <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "1rem", color: "var(--text-primary)" }}>Full Mess Menu</h3>
-            {loading ? (
-              <p style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>Loading...</p>
-            ) : menuImg ? (
-              <img src={menuImg} alt="Mess Menu" style={{ width: "100%", maxHeight: "60vh", objectFit: "contain", borderRadius: "var(--radius-md)", border: "1px solid var(--border)", background: "var(--surface-0)" }} />
-            ) : (
-              <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", fontStyle: "italic", background: "var(--surface-2)", padding: "1rem", borderRadius: "var(--radius-md)", border: "1px dashed var(--border)" }}>Provider hasn&apos;t uploaded a photo menu.</p>
-            )}
-          </div>
+          {tab === "full" && (
+            <div>
+              <h3 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "1rem", color: "var(--text-primary)" }}>Full Provider Menu</h3>
+              {loading ? (
+                <p style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>Loading...</p>
+              ) : menuImg ? (
+                <img src={menuImg} alt="Mess Menu" style={{ width: "100%", maxHeight: "60vh", objectFit: "contain", borderRadius: "var(--radius-md)", border: "1px solid var(--border)", background: "var(--surface-0)" }} />
+              ) : (
+                <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", fontStyle: "italic", background: "var(--surface-2)", padding: "1rem", borderRadius: "var(--radius-md)", border: "1px dashed var(--border)" }}>Provider hasn&apos;t uploaded a photo menu.</p>
+              )}
+            </div>
+          )}
           
         </div>
       </div>
@@ -227,7 +239,7 @@ export default function CustomerHome() {
   const [providers, setProviders] = useState<ProviderRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [showFind, setShowFind] = useState(false);
-  const [viewProvider, setViewProvider] = useState<ProviderRecord | null>(null);
+  const [viewProvider, setViewProvider] = useState<{ record: ProviderRecord, tab: "today" | "full" } | null>(null);
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
   const [removing, setRemoving] = useState(false);
   const [username, setUsername] = useState("");
@@ -377,9 +389,14 @@ export default function CustomerHome() {
                   </div>
                 )}
 
-                <button className="btn-primary" onClick={() => setViewProvider(p)} style={{ width: "100%", padding: "0.75rem", background: "var(--surface-2)", color: "var(--text-primary)", border: "1px solid var(--border)" }}>
-                  View Menu
-                </button>
+                <div style={{ display: "flex", gap: "0.5rem" }}>
+                  <button className="btn-primary" onClick={() => setViewProvider({ record: p, tab: "today" })} style={{ flex: 1, padding: "0.75rem", background: "var(--surface-2)", color: "var(--text-primary)", border: "1px solid var(--border)", fontSize: "0.85rem", cursor: "pointer" }}>
+                    🍽️ Today's Menu
+                  </button>
+                  <button className="btn-primary" onClick={() => setViewProvider({ record: p, tab: "full" })} style={{ flex: 1, padding: "0.75rem", background: "var(--surface-2)", color: "var(--text-primary)", border: "1px solid var(--border)", fontSize: "0.85rem", cursor: "pointer" }}>
+                    📖 Full Menu
+                  </button>
+                </div>
               </div>
             )})}
           </div>
@@ -396,7 +413,8 @@ export default function CustomerHome() {
 
       {viewProvider && (
         <ProviderDetailsModal 
-          record={viewProvider} 
+          record={viewProvider.record} 
+          initialTab={viewProvider.tab}
           onClose={() => setViewProvider(null)} 
         />
       )}
@@ -412,7 +430,8 @@ const overlayStyle: React.CSSProperties = {
 const modalStyle: React.CSSProperties = {
   background: "var(--surface-1)", border: "1px solid var(--border)",
   borderRadius: "var(--radius-lg)", padding: "2rem", width: "100%", maxWidth: 480,
-  maxHeight: "90dvh", overflowY: "auto", animation: "fadeUp 0.25s ease both",
+  maxHeight: "90dvh", overflowY: "auto", scrollbarWidth: "none", msOverflowStyle: "none",
+  animation: "fadeUp 0.25s ease both",
 };
 const modalHeaderStyle: React.CSSProperties = {
   display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.25rem",

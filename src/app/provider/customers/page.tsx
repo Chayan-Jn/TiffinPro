@@ -53,12 +53,42 @@ function EditModal({ record, onClose, onSaved }: {
   // Meal Plan State
   const [planType, setPlanType] = useState(record.mealPlan?.planType || "monthly");
   const [rate, setRate] = useState(record.mealPlan?.rate?.toString() || "0");
-  const [startDate, setStartDate] = useState(record.mealPlan?.startDate ? new Date(record.mealPlan.startDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
-  const [endDate, setEndDate] = useState(record.mealPlan?.endDate ? new Date(record.mealPlan.endDate).toISOString().split('T')[0] : "");
+  const defaultStart = record.mealPlan?.startDate ? new Date(record.mealPlan.startDate) : new Date();
+  const [startDate, setStartDate] = useState(defaultStart.toISOString().split('T')[0]);
+  
+  const [endDate, setEndDate] = useState(() => {
+    if (record.mealPlan?.endDate) return new Date(record.mealPlan.endDate).toISOString().split('T')[0];
+    const pType = record.mealPlan?.planType || "monthly";
+    if (pType === "monthly") {
+      const d = new Date(defaultStart);
+      d.setMonth(d.getMonth() + 1);
+      return d.toISOString().split('T')[0];
+    }
+    return "";
+  });
   const [mealsStr, setMealsStr] = useState(record.mealPlan?.meals?.join(", ") || "Breakfast, Lunch, Dinner");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [customMeal, setCustomMeal] = useState("");
+
+  const handlePlanTypeChange = (val: "monthly" | "per_tiffin" | "custom") => {
+    setPlanType(val);
+    if (val === "monthly" && startDate && !endDate) {
+      const d = new Date(startDate);
+      d.setMonth(d.getMonth() + 1);
+      setEndDate(d.toISOString().split('T')[0]);
+    }
+  };
+
+  const toggleMeal = (m: string) => {
+    let arr = mealsStr.split(",").map(s => s.trim()).filter(Boolean);
+    if (arr.includes(m)) arr = arr.filter(x => x !== m);
+    else arr.push(m);
+    setMealsStr(arr.join(", "));
+  };
+
+  const MEAL_OPTIONS = ["Breakfast", "Lunch", "Dinner", "Snacks"];
 
   async function save() {
     setLoading(true); setError("");
@@ -117,7 +147,7 @@ function EditModal({ record, onClose, onSaved }: {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
               <div>
                 <label className="field-label" style={{ fontSize: "0.75rem" }}>Plan Type</label>
-                <select className="field-input" value={planType} onChange={e => setPlanType(e.target.value as any)} style={{ padding: "0.6rem" }}>
+                <select className="field-input" value={planType} onChange={e => handlePlanTypeChange(e.target.value as any)} style={{ padding: "0.6rem" }}>
                   <option value="monthly">Monthly Fixed</option>
                   <option value="per_tiffin">Per Tiffin</option>
                   <option value="custom">Custom</option>
@@ -142,8 +172,53 @@ function EditModal({ record, onClose, onSaved }: {
 
             <div>
               <label className="field-label" style={{ fontSize: "0.75rem" }}>Meals Included</label>
-              <input className="field-input" placeholder="e.g. Breakfast, Lunch" value={mealsStr} onChange={e => setMealsStr(e.target.value)} />
-              <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", marginTop: "0.3rem" }}>Comma separated meals they receive</div>
+              <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginTop: "0.2rem" }}>
+                {Array.from(new Set([...MEAL_OPTIONS, ...mealsStr.split(",").map(s => s.trim()).filter(Boolean)])).map(m => {
+                  const active = mealsStr.split(",").map(s => s.trim()).includes(m);
+                  return (
+                    <button type="button" key={m} onClick={() => toggleMeal(m)}
+                      style={{
+                        padding: "0.4rem 0.8rem", borderRadius: "20px", fontSize: "0.75rem",
+                        border: "1px solid", fontWeight: 600, cursor: "pointer", transition: "all 0.15s ease",
+                        background: active ? "var(--brand-orange)" : "var(--surface-0)",
+                        color: active ? "#fff" : "var(--text-secondary)",
+                        borderColor: active ? "var(--brand-orange)" : "var(--border)"
+                      }}>
+                      {m}
+                    </button>
+                  );
+                })}
+              </div>
+              <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
+                <input 
+                  className="field-input" 
+                  style={{ padding: "0.4rem 0.6rem", fontSize: "0.75rem", flex: 1 }} 
+                  placeholder="Custom meal (e.g., Jain Food)" 
+                  value={customMeal} 
+                  onChange={e => setCustomMeal(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      const val = customMeal.trim();
+                      if (val) {
+                        const arr = mealsStr.split(",").map(s => s.trim()).filter(Boolean);
+                        if (!arr.includes(val)) setMealsStr([...arr, val].join(", "));
+                        setCustomMeal("");
+                      }
+                    }
+                  }}
+                />
+                <button type="button" className="btn-primary" style={{ padding: "0.4rem 0.8rem", fontSize: "0.75rem", width: "auto" }}
+                  onClick={() => {
+                    const val = customMeal.trim();
+                    if (val) {
+                      const arr = mealsStr.split(",").map(s => s.trim()).filter(Boolean);
+                      if (!arr.includes(val)) setMealsStr([...arr, val].join(", "));
+                      setCustomMeal("");
+                    }
+                  }}
+                >Add</button>
+              </div>
             </div>
           </div>
 
@@ -565,7 +640,7 @@ const overlayStyle: React.CSSProperties = {
 const modalStyle: React.CSSProperties = {
   background: "var(--surface-1)", border: "1px solid var(--border)",
   borderRadius: "var(--radius-lg)", padding: "2rem", width: "100%",
-  maxHeight: "90dvh", overflowY: "auto",
+  maxHeight: "90dvh", overflowY: "auto", scrollbarWidth: "none", msOverflowStyle: "none",
   animation: "fadeUp 0.25s ease both",
 };
 const modalHeaderStyle: React.CSSProperties = {

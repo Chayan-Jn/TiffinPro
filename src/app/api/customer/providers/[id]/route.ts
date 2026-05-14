@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { connectDB } from "@/lib/db";
 import ProviderCustomer from "@/models/ProviderCustomer";
+import mongoose from "mongoose";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -28,10 +29,15 @@ export async function DELETE(_request: NextRequest, ctx: RouteContext) {
     return NextResponse.json({ error: "Subscription not found." }, { status: 404 });
   }
 
-  // Downgrade to manual (unlinked) — keep provider's data intact
-  record.userId = null;
+  // Downgrade to manual (unlinked) — keep provider's data intact.
+  // Because MongoDB sparse compound indexes include documents if ANY indexed field exists,
+  // we cannot simply $unset userId (it gets treated as null and causes duplicate key errors).
+  // Instead, we assign a fresh, random ObjectId to bypass the unique constraint!
+  record.userId = new mongoose.Types.ObjectId() as any;
   record.status = "unlinked";
   record.possibleDuplicateOf = null;
+  record.previousUserId = session.user.id as any;
+  
   await record.save();
 
   return NextResponse.json({

@@ -162,20 +162,37 @@ export default function ProviderDeliveriesPage() {
                 </div>
                 
                 <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                  {d.status === "delivered" && <span style={{ color: "#34d399", fontSize: "0.8rem", fontWeight: 700, marginRight: "0.5rem" }}>DELIVERED</span>}
-                  {d.status === "cancelled" && <span style={{ color: "#f87171", fontSize: "0.8rem", fontWeight: 700, marginRight: "0.5rem" }}>CANCELLED</span>}
-                  
-                  {d.status !== "delivered" && (
-                    <button onClick={() => updateStatus([d.customerId], "delivered")} disabled={updating}
-                      style={{ background: "rgba(52,211,153,0.1)", color: "#10b981", border: "1px solid rgba(52,211,153,0.3)", borderRadius: 6, padding: "0.4rem 0.8rem", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer" }}>
-                      Mark Delivered
-                    </button>
+                  {d.status === "pending" && (
+                    <>
+                      <button onClick={() => updateStatus([d.customerId], "delivered")} disabled={updating}
+                        style={{ background: "rgba(52,211,153,0.1)", color: "#10b981", border: "1px solid rgba(52,211,153,0.3)", borderRadius: 6, padding: "0.4rem 0.8rem", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer" }}>
+                        ✅ Mark Delivered
+                      </button>
+                      <button onClick={() => updateStatus([d.customerId], "cancelled")} disabled={updating}
+                        style={{ background: "transparent", color: "#f87171", border: "1px solid rgba(248,113,113,0.3)", borderRadius: 6, padding: "0.4rem 0.8rem", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer" }}>
+                        ✕ Cancel Tiffin
+                      </button>
+                    </>
                   )}
-                  {d.status !== "cancelled" && (
-                    <button onClick={() => updateStatus([d.customerId], "cancelled")} disabled={updating}
-                      style={{ background: "transparent", color: "#f87171", border: "1px solid rgba(248,113,113,0.3)", borderRadius: 6, padding: "0.4rem 0.8rem", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer" }}>
-                      Cancel
-                    </button>
+
+                  {d.status === "delivered" && (
+                    <>
+                      <span style={{ color: "#34d399", fontSize: "0.8rem", fontWeight: 700, marginRight: "0.5rem" }}>DELIVERED</span>
+                      <button onClick={() => updateStatus([d.customerId], "pending")} disabled={updating}
+                        style={{ background: "transparent", color: "var(--text-muted)", border: "1px solid var(--border)", borderRadius: 6, padding: "0.3rem 0.6rem", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer" }}>
+                        ↩ Undo
+                      </button>
+                    </>
+                  )}
+
+                  {d.status === "cancelled" && (
+                    <>
+                      <span style={{ color: "#f87171", fontSize: "0.8rem", fontWeight: 700, marginRight: "0.5rem" }}>CANCELLED</span>
+                      <button onClick={() => updateStatus([d.customerId], "pending")} disabled={updating}
+                        style={{ background: "transparent", color: "var(--text-muted)", border: "1px solid var(--border)", borderRadius: 6, padding: "0.3rem 0.6rem", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer" }}>
+                        ↩ Undo
+                      </button>
+                    </>
                   )}
                 </div>
               </div>

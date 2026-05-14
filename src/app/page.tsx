@@ -20,6 +20,20 @@ export default async function LandingPage() {
           "radial-gradient(ellipse 80% 60% at 50% -10%, rgba(249,115,22,0.18) 0%, transparent 70%), var(--surface-0)",
       }}
     >
+      <style>{`
+        .hover-card {
+          transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+        }
+        .hover-card-provider:hover {
+          transform: translateY(-4px) !important;
+          box-shadow: 0 16px 48px rgba(249,115,22,0.25) !important;
+        }
+        .hover-card-customer:hover {
+          transform: translateY(-4px) !important;
+          box-shadow: 0 16px 48px rgba(0,0,0,0.3) !important;
+          border-color: rgba(255,255,255,0.15) !important;
+        }
+      `}</style>
       {/* Logo / Brand */}
       <div style={{ textAlign: "center", marginBottom: "3rem" }}>
         <div
@@ -81,22 +95,13 @@ export default async function LandingPage() {
           style={{ textDecoration: "none" }}
         >
           <div
-            className="landing-card"
+            className="landing-card hover-card hover-card-provider"
             style={{
               background: "linear-gradient(135deg, rgba(249,115,22,0.15), rgba(249,115,22,0.05))",
               border: "1px solid rgba(249,115,22,0.3)",
               borderRadius: "var(--radius-lg)",
               padding: "2rem",
               cursor: "pointer",
-              transition: "transform 0.2s, box-shadow 0.2s",
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.transform = "translateY(-4px)";
-              (e.currentTarget as HTMLElement).style.boxShadow = "0 16px 48px rgba(249,115,22,0.25)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
-              (e.currentTarget as HTMLElement).style.boxShadow = "none";
             }}
           >
             <div style={{ fontSize: "2rem", marginBottom: "0.75rem" }}>👨‍🍳</div>
@@ -121,23 +126,13 @@ export default async function LandingPage() {
           style={{ textDecoration: "none" }}
         >
           <div
+            className="hover-card hover-card-customer"
             style={{
               background: "var(--surface-1)",
               border: "1px solid var(--border)",
               borderRadius: "var(--radius-lg)",
               padding: "2rem",
               cursor: "pointer",
-              transition: "transform 0.2s, box-shadow 0.2s, border-color 0.2s",
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.transform = "translateY(-4px)";
-              (e.currentTarget as HTMLElement).style.boxShadow = "0 16px 48px rgba(0,0,0,0.3)";
-              (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.15)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
-              (e.currentTarget as HTMLElement).style.boxShadow = "none";
-              (e.currentTarget as HTMLElement).style.borderColor = "var(--border)";
             }}
           >
             <div style={{ fontSize: "2rem", marginBottom: "0.75rem" }}>🙋</div>

@@ -112,37 +112,21 @@ export async function POST(request: NextRequest) {
 
   // Flag any existing manual records with similar names as possible duplicates
   const nameLower = targetUser.displayName.toLowerCase();
-  await ProviderCustomer.updateMany(
-    {
-      providerId: session.user.id,
-      status: "unlinked",
-      possibleDuplicateOf: null,
-    },
-    [
-      {
-        $set: {
-          possibleDuplicateOf: {
-            $cond: {
-              if: {
-                $or: [
-                  {
-                    $gt: [
-                      {
-                        $indexOfCP: [{ $toLower: "$displayName" }, nameLower],
-                      },
-                      -1,
-                    ],
-                  },
-                ],
-              },
-              then: record._id,
-              else: null,
-            },
-          },
-        },
-      },
-    ]
-  );
+  const unlinked = await ProviderCustomer.find({
+    providerId: session.user.id,
+    status: "unlinked",
+    possibleDuplicateOf: null,
+  });
+
+  for (const u of unlinked) {
+    const uNameLower = u.displayName.toLowerCase();
+    if (uNameLower.includes(nameLower) || nameLower.includes(uNameLower)) {
+      await ProviderCustomer.updateOne(
+        { _id: u._id },
+        { $set: { possibleDuplicateOf: record._id } }
+      );
+    }
+  }
 
   return NextResponse.json({ record }, { status: 201 });
 }
