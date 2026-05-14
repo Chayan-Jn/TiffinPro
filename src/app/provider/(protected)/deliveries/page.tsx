@@ -111,92 +111,94 @@ export default function ProviderDeliveriesPage() {
       {/* Header Area */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "3rem" }}>
         <div>
-          <h1 style={{ fontSize: "2.5rem", fontWeight: 900, color: "#fff", marginBottom: "0.5rem" }}>Deliveries</h1>
-          <p style={{ color: "var(--t2)", fontSize: "1.1rem", fontWeight: 500 }}>Track and manage daily meal fulfillments.</p>
+          <h1 style={{ fontSize: "2.5rem", fontWeight: 950, color: "#fff", marginBottom: "0.5rem" }}>Daily Deliveries</h1>
+          <p style={{ color: "var(--t2)", fontSize: "1.1rem", fontWeight: 500 }}>Fulfill and track meal distributions for today.</p>
         </div>
-        <button className="btn-primary" onClick={markAllDelivered} disabled={updating || pendingCount === 0} style={{ padding: "0.8rem 1.75rem" }}>
-          <LuCircleCheck /> Deliver All ({pendingCount})
+        <button className="btn-primary" onClick={markAllDelivered} disabled={updating || pendingCount === 0} style={{ padding: "0.85rem 1.75rem" }}>
+          <LuCircleCheck /> Mark All Delivered ({pendingCount})
         </button>
       </div>
 
-      <div style={{ maxWidth: "900px" }}>
+      <div style={{ maxWidth: "1000px" }}>
         {/* Controls Bar */}
-        <div style={{ background: "var(--s1)", border: "1px solid var(--bd)", borderRadius: "var(--r2)", padding: "1.5rem", display: "flex", flexWrap: "wrap", gap: "2rem", alignItems: "center", justifyContent: "space-between", marginBottom: "2rem" }}>
-          <div style={{ display: "flex", gap: "1.5rem", alignItems: "center" }}>
-            <div style={{ position: "relative" }}>
-              <label className="field-label" style={{ fontSize: "0.65rem", marginBottom: "0.4rem" }}>Service Date</label>
+        <div style={{ background: "var(--s1)", border: "1px solid var(--bd)", borderRadius: "var(--r3)", padding: "1.75rem", display: "flex", flexWrap: "wrap", gap: "2.5rem", alignItems: "center", justifyContent: "space-between", marginBottom: "2.5rem" }}>
+          <div style={{ display: "flex", gap: "2rem", alignItems: "center" }}>
+            <div>
+              <label className="field-label" style={{ fontSize: "0.7rem", fontWeight: 900, color: "var(--t3)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.6rem" }}>Service Date</label>
               <div style={{ position: "relative" }}>
-                <LuCalendar style={{ position: "absolute", left: "1rem", top: "50%", transform: "translateY(-50%)", color: "var(--brand)", pointerEvents: "none" }} />
-                <input type="date" className="field-input" value={date} onChange={e => setDate(e.target.value)} style={{ width: "auto", paddingLeft: "2.5rem", height: "44px", fontSize: "0.9rem" }} />
+                <LuCalendar style={{ position: "absolute", left: "1.1rem", top: "50%", transform: "translateY(-50%)", color: "var(--brand)", pointerEvents: "none" }} />
+                <input type="date" className="field-input" value={date} onChange={e => setDate(e.target.value)} style={{ width: "auto", paddingLeft: "3rem", height: "50px", fontSize: "1rem", fontWeight: 700 }} />
               </div>
             </div>
 
             <div>
-              <label className="field-label" style={{ fontSize: "0.65rem", marginBottom: "0.4rem" }}>Select Meal</label>
-              <select className="field-input" value={meal} onChange={e => setMeal(e.target.value)} style={{ width: "auto", height: "44px", fontSize: "0.9rem", paddingRight: "2.5rem" }}>
+              <label className="field-label" style={{ fontSize: "0.7rem", fontWeight: 900, color: "var(--t3)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.6rem" }}>Select Meal</label>
+              <select className="field-input" value={meal} onChange={e => setMeal(e.target.value)} style={{ width: "auto", height: "50px", fontSize: "1rem", fontWeight: 700, paddingRight: "3rem" }}>
                 {commonMeals.map(m => <option key={m} value={m}>{m}</option>)}
               </select>
             </div>
           </div>
 
-          <div style={{ textAlign: "right", padding: "0.6rem 1.5rem", background: "rgba(255,107,53,0.05)", borderRadius: "var(--r2)", border: "1px solid rgba(255,107,53,0.15)" }}>
-            <div style={{ fontSize: "0.65rem", color: "var(--brand)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em" }}>Active Tiffins</div>
-            <div style={{ fontSize: "1.8rem", fontWeight: 950, color: "#fff", lineHeight: 1.1 }}>{totalTiffins}</div>
+          <div style={{ textAlign: "right", padding: "0.8rem 2rem", background: "rgba(255,107,53,0.05)", borderRadius: "var(--r2)", border: "1px solid rgba(255,107,53,0.15)" }}>
+            <div style={{ fontSize: "0.7rem", color: "var(--brand)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "0.2rem" }}>Scheduled Tiffins</div>
+            <div style={{ fontSize: "2.2rem", fontWeight: 950, color: "#fff", lineHeight: 1 }}>{totalTiffins}</div>
           </div>
         </div>
 
         {/* List */}
         {loading ? (
-          <div style={{ textAlign: "center", padding: "5rem" }}><span className="spinner" /></div>
+          <div style={{ textAlign: "center", padding: "10rem" }}><span className="spinner" /></div>
         ) : deliveries.length === 0 ? (
-          <div className="card" style={{ textAlign: "center", padding: "6rem 2rem", borderStyle: "dashed", opacity: 0.8 }}>
-            <LuChefHat style={{ fontSize: "3.5rem", color: "var(--t4)", marginBottom: "1.5rem" }} />
-            <h3 style={{ fontSize: "1.25rem", fontWeight: 900, color: "#fff", marginBottom: "0.5rem" }}>No deliveries scheduled</h3>
-            <p style={{ color: "var(--t3)", fontWeight: 500 }}>There are no active customers for {meal} on this date.</p>
+          <div className="card" style={{ textAlign: "center", padding: "8rem 2rem", borderStyle: "dashed", opacity: 0.8, background: "rgba(255,107,53,0.02)" }}>
+            <LuChefHat style={{ fontSize: "4.5rem", color: "var(--t4)", marginBottom: "2rem" }} />
+            <h3 style={{ fontSize: "1.5rem", fontWeight: 950, color: "#fff", marginBottom: "0.75rem" }}>Kitchen is Quiet</h3>
+            <p style={{ color: "var(--t3)", fontWeight: 600, fontSize: "1.05rem" }}>No active customers found for {meal} on this date.</p>
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
             {deliveries.map(d => (
-              <div key={d.customerId} className="card" style={{
-                padding: "1.25rem 1.75rem", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1.5rem",
+              <div key={d.customerId} className="card hover-lift-up" style={{
+                padding: "1.5rem 2.25rem", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "2rem",
                 background: "var(--s1)", borderColor: d.status === "delivered" ? "rgba(34,197,94,0.3)" : "var(--bd)"
               }}>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 900, fontSize: "1.1rem", color: "#fff", display: "flex", gap: "0.75rem", alignItems: "center" }}>
+                  <div style={{ fontWeight: 950, fontSize: "1.25rem", color: "#fff", display: "flex", gap: "1rem", alignItems: "center" }}>
                     {d.displayName}
-                    {d.status === "cancelled" && <span style={{ background: "rgba(239,68,68,0.1)", color: "var(--red)", padding: "2px 8px", borderRadius: 6, fontSize: "0.65rem", fontWeight: 900 }}>SKIPPED</span>}
-                    {(d.quantity ?? 1) > 1 && <span style={{ background: "rgba(255,107,53,0.1)", color: "var(--brand)", padding: "2px 8px", borderRadius: 6, fontSize: "0.65rem", fontWeight: 900 }}>{d.quantity} TIFFINS</span>}
+                    <div style={{ display: "flex", gap: "0.5rem" }}>
+                       {d.status === "cancelled" && <span style={{ background: "rgba(239,68,68,0.1)", color: "var(--red)", padding: "2px 10px", borderRadius: 8, fontSize: "0.7rem", fontWeight: 900, border: "1px solid rgba(239,68,68,0.15)" }}>SKIPPED</span>}
+                       {(d.quantity ?? 1) > 1 && <span style={{ background: "rgba(255,107,53,0.08)", color: "var(--brand)", padding: "2px 10px", borderRadius: 8, fontSize: "0.7rem", fontWeight: 900, border: "1px solid rgba(255,107,53,0.15)" }}>{d.quantity} PKTS</span>}
+                    </div>
                   </div>
-                  {d.phone && <div style={{ color: "var(--t3)", fontSize: "0.85rem", marginTop: "0.25rem", fontWeight: 500 }}>{d.phone}</div>}
+                  {d.phone && <div style={{ color: "var(--t3)", fontSize: "0.9rem", marginTop: "0.4rem", fontWeight: 600 }}>{d.phone}</div>}
                 </div>
                 
-                <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "2rem" }}>
                   {/* Quantity Controls */}
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", background: "var(--s2)", padding: "0.4rem", borderRadius: "12px", border: "1px solid var(--bd)" }}>
-                    <button disabled={updating || (d.quantity ?? 1) <= 0} onClick={() => adjustQuantity(d.customerId, (d.quantity ?? 1) - 1)} className="btn-icon" style={{ width: 28, height: 28, background: "var(--s1)" }}><LuMinus /></button>
-                    <span style={{ fontWeight: 950, width: "1.2rem", textAlign: "center", fontSize: "1rem", color: "#fff" }}>{d.quantity ?? 1}</span>
-                    <button disabled={updating} onClick={() => adjustQuantity(d.customerId, (d.quantity ?? 1) + 1)} className="btn-icon" style={{ width: 28, height: 28, background: "var(--s1)" }}><LuPlus /></button>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.8rem", background: "var(--s2)", padding: "0.5rem", borderRadius: "14px", border: "1px solid var(--bd)" }}>
+                    <button disabled={updating || (d.quantity ?? 1) <= 0} onClick={() => adjustQuantity(d.customerId, (d.quantity ?? 1) - 1)} className="btn-icon" style={{ width: 32, height: 32, background: "var(--s1)", color: "var(--t2)" }}><LuMinus /></button>
+                    <span style={{ fontWeight: 950, width: "1.5rem", textAlign: "center", fontSize: "1.1rem", color: "#fff" }}>{d.quantity ?? 1}</span>
+                    <button disabled={updating} onClick={() => adjustQuantity(d.customerId, (d.quantity ?? 1) + 1)} className="btn-icon" style={{ width: 32, height: 32, background: "var(--s1)", color: "var(--brand)" }}><LuPlus /></button>
                   </div>
 
-                  <div style={{ display: "flex", gap: "0.75rem", minWidth: "160px", justifyContent: "flex-end" }}>
+                  <div style={{ display: "flex", gap: "0.8rem", minWidth: "180px", justifyContent: "flex-end" }}>
                     {d.status === "pending" && (d.quantity ?? 1) > 0 ? (
                       <>
-                        <button onClick={() => updateStatus([d.customerId], "delivered")} disabled={updating} className="btn-ghost" style={{ fontSize: "0.8rem", color: "var(--green)", borderColor: "rgba(34,197,94,0.2)", padding: "0.6rem 1rem" }}>
+                        <button onClick={() => updateStatus([d.customerId], "delivered")} disabled={updating} className="btn-ghost" style={{ fontSize: "0.85rem", color: "var(--green)", borderColor: "rgba(34,197,94,0.25)", padding: "0.7rem 1.25rem", fontWeight: 800 }}>
                           <LuCircleCheck /> Delivered
                         </button>
-                        <button onClick={() => updateStatus([d.customerId], "cancelled")} disabled={updating} className="btn-ghost" style={{ fontSize: "0.8rem", color: "var(--red)", borderColor: "rgba(239, 68, 68, 0.2)", padding: "0.6rem 1rem" }}>
+                        <button onClick={() => updateStatus([d.customerId], "cancelled")} disabled={updating} className="btn-ghost" style={{ fontSize: "0.85rem", color: "var(--t3)", borderColor: "var(--bd)", padding: "0.7rem 1rem", fontWeight: 800 }}>
                           Skip
                         </button>
                       </>
                     ) : d.status === "delivered" ? (
-                      <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                        <span style={{ color: "var(--green)", fontSize: "0.8rem", fontWeight: 900, display: "flex", alignItems: "center", gap: "0.4rem" }}><LuCircleCheck /> DELIVERED</span>
-                        <button onClick={() => updateStatus([d.customerId], "pending")} disabled={updating} className="btn-icon" style={{ background: "var(--s2)" }} title="Undo"><LuRotateCcw /></button>
+                      <div style={{ display: "flex", alignItems: "center", gap: "1.25rem" }}>
+                        <span style={{ color: "var(--green)", fontSize: "0.85rem", fontWeight: 900, display: "flex", alignItems: "center", gap: "0.5rem" }}><LuCircleCheck /> SUCCESS</span>
+                        <button onClick={() => updateStatus([d.customerId], "pending")} disabled={updating} className="btn-icon" style={{ background: "var(--s2)", color: "var(--t3)" }} title="Undo"><LuRotateCcw /></button>
                       </div>
                     ) : d.status === "cancelled" ? (
-                      <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                        <span style={{ color: "var(--red)", fontSize: "0.8rem", fontWeight: 900, display: "flex", alignItems: "center", gap: "0.4rem" }}><LuCircleX /> SKIPPED</span>
-                        <button onClick={() => updateStatus([d.customerId], "pending")} disabled={updating} className="btn-icon" style={{ background: "var(--s2)" }} title="Undo"><LuRotateCcw /></button>
+                      <div style={{ display: "flex", alignItems: "center", gap: "1.25rem" }}>
+                        <span style={{ color: "var(--red)", fontSize: "0.85rem", fontWeight: 900, display: "flex", alignItems: "center", gap: "0.5rem" }}><LuCircleX /> SKIPPED</span>
+                        <button onClick={() => updateStatus([d.customerId], "pending")} disabled={updating} className="btn-icon" style={{ background: "var(--s2)", color: "var(--t3)" }} title="Undo"><LuRotateCcw /></button>
                       </div>
                     ) : null}
                   </div>

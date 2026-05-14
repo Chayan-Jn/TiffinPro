@@ -23,6 +23,8 @@ interface CustomerRecord {
     rate: number;
     startDate: string;
     endDate?: string;
+    mealQuota?: number;
+    mealsConsumed?: number;
     meals: string[];
   };
 }
@@ -62,6 +64,7 @@ function EditModal({ record, onClose, onSaved }: {
   
   const [planType, setPlanType] = useState(record.mealPlan?.planType || "monthly");
   const [rate, setRate] = useState(record.mealPlan?.rate?.toString() || "0");
+  const [mealQuota, setMealQuota] = useState(record.mealPlan?.mealQuota?.toString() || "0");
   const [startDate, setStartDate] = useState(record.mealPlan?.startDate ? new Date(record.mealPlan.startDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
   const [endDate, setEndDate] = useState(record.mealPlan?.endDate ? new Date(record.mealPlan.endDate).toISOString().split('T')[0] : "");
   const [mealsStr, setMealsStr] = useState(record.mealPlan?.meals?.join(", ") || "Breakfast, Lunch, Dinner");
@@ -79,6 +82,7 @@ function EditModal({ record, onClose, onSaved }: {
           mealPlan: {
             planType,
             rate: Number(rate),
+            mealQuota: Number(mealQuota),
             startDate: new Date(startDate).toISOString(),
             endDate: endDate ? new Date(endDate).toISOString() : undefined,
             meals: mealsStr.split(",").map(m => m.trim()).filter(m => m.length > 0),
@@ -99,7 +103,7 @@ function EditModal({ record, onClose, onSaved }: {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="auth-card animate-fade-up" style={{ maxWidth: 500, padding: "2.5rem" }} onClick={e => e.stopPropagation()}>
+      <div className="auth-card animate-fade-up" style={{ maxWidth: 540, padding: "2.5rem" }} onClick={e => e.stopPropagation()}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
           <h2 style={{ fontSize: "1.5rem", fontWeight: 900, color: "#fff" }}>Edit Customer</h2>
           <button onClick={onClose} style={{ background: "transparent", color: "var(--t3)", fontSize: "1.5rem" }}><FiX /></button>
@@ -124,9 +128,10 @@ function EditModal({ record, onClose, onSaved }: {
             </div>
           </div>
 
-          <div style={{ padding: "1.5rem", background: "var(--s2)", borderRadius: "var(--r2)", border: "1px solid var(--bd)" }}>
-            <h3 style={{ fontSize: "0.75rem", fontWeight: 900, color: "var(--brand)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1.25rem" }}>Meal Plan Settings</h3>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
+          <div style={{ padding: "1.75rem", background: "var(--s2)", borderRadius: "var(--r2)", border: "1px solid var(--bd)", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+            <h3 style={{ fontSize: "0.8rem", fontWeight: 900, color: "var(--brand)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Meal Plan Settings</h3>
+            
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
               <div>
                 <label className="field-label" style={{ fontSize: "0.65rem" }}>Plan Type</label>
                 <select className="field-input" value={planType} onChange={e => setPlanType(e.target.value as any)}>
@@ -137,19 +142,39 @@ function EditModal({ record, onClose, onSaved }: {
               </div>
               <div>
                 <label className="field-label" style={{ fontSize: "0.65rem" }}>Rate (₹)</label>
-                <input className="field-input" type="number" placeholder="Rate ₹" value={rate} onChange={e => setRate(e.target.value)} />
+                <input className="field-input" type="number" value={rate} onChange={e => setRate(e.target.value)} />
               </div>
             </div>
-            <div>
-              <label className="field-label" style={{ fontSize: "0.65rem" }}>Meals Included</label>
-              <input className="field-input" placeholder="Breakfast, Lunch, Dinner" value={mealsStr} onChange={e => setMealsStr(e.target.value)} />
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", marginBottom: "2.5rem" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.25rem" }}>
+              <div>
+                <label className="field-label" style={{ fontSize: "0.75rem", fontWeight: 900, color: "var(--t3)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.6rem" }}>Start Date</label>
+                <input className="field-input" style={{ height: "50px", fontWeight: 700 }} type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
+              </div>
+              <div>
+                <label className="field-label" style={{ fontSize: "0.75rem", fontWeight: 900, color: "var(--t3)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.6rem" }}>End Date (Optional)</label>
+                <input className="field-input" style={{ height: "50px", fontWeight: 700 }} type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.25rem" }}>
+              <div>
+                <label className="field-label" style={{ fontSize: "0.75rem", fontWeight: 900, color: "var(--t3)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.6rem" }}>Meal Quota (Total)</label>
+                <input className="field-input" style={{ height: "50px", fontWeight: 800, color: "var(--brand)" }} type="number" value={mealQuota} onChange={e => setMealQuota(e.target.value)} />
+              </div>
+              <div>
+                <label className="field-label" style={{ fontSize: "0.75rem", fontWeight: 900, color: "var(--t3)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.6rem" }}>Meals Included</label>
+                <input className="field-input" style={{ height: "50px", fontWeight: 700 }} placeholder="e.g. B, L, D" value={mealsStr} onChange={e => setMealsStr(e.target.value)} />
+              </div>
             </div>
           </div>
+        </div>
 
-          <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
-            <button className="btn-ghost" style={{ flex: 1 }} onClick={onClose}>Cancel</button>
-            <button className="btn-primary" style={{ flex: 1.5 }} onClick={save} disabled={loading}>
-              {loading ? <span className="spinner" /> : <><FiSave /> Save Changes</>}
+        <div style={{ display: "flex", gap: "1rem" }}>
+            <button className="btn-ghost" style={{ flex: 1, height: "54px", fontWeight: 800 }} onClick={onClose}>Cancel</button>
+            <button className="btn-primary" style={{ flex: 1.5, height: "54px", fontSize: "1rem" }} onClick={save} disabled={loading}>
+              {loading ? <span className="spinner" /> : <><FiSave /> Update Plan</>}
             </button>
           </div>
         </div>
@@ -326,20 +351,22 @@ export default function ProviderCustomersPage() {
       </div>
 
       {/* Filters Bar */}
-      <div style={{ display: "flex", gap: "0.5rem", marginBottom: "2.5rem", background: "var(--s1)", padding: "0.4rem", borderRadius: "var(--r2)", border: "1px solid var(--bd)", width: "fit-content" }}>
+      <div style={{ display: "flex", gap: "0.5rem", marginBottom: "3rem", background: "var(--s1)", padding: "0.5rem", borderRadius: "var(--r3)", border: "1px solid var(--bd)", width: "fit-content" }}>
         {[
-          { id: "all", label: "All" },
-          { id: "linked", label: "Connected" },
-          { id: "unlinked", label: "Manual" },
+          { id: "all", label: "All Customers" },
+          { id: "linked", label: "App Connected" },
+          { id: "unlinked", label: "Manual Entry" },
           { id: "on_hold", label: "On Hold" },
         ].map(btn => (
           <button 
             key={btn.id} 
             onClick={() => setFilter(btn.id as any)}
             style={{ 
-              padding: "0.6rem 1.25rem", borderRadius: "var(--r1)", fontSize: "0.85rem", fontWeight: 800,
+              padding: "0.7rem 1.5rem", borderRadius: "var(--r2)", fontSize: "0.85rem", fontWeight: 900,
               background: filter === btn.id ? "var(--brand)" : "transparent",
-              color: filter === btn.id ? "#fff" : "var(--t3)"
+              color: filter === btn.id ? "#fff" : "var(--t3)",
+              transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+              boxShadow: filter === btn.id ? "0 4px 12px var(--brand-glow)" : "none"
             }}
           >
             {btn.label}
@@ -349,43 +376,59 @@ export default function ProviderCustomersPage() {
 
       {/* Grid */}
       {loading ? (
-        <div style={{ textAlign: "center", padding: "5rem" }}><span className="spinner" /></div>
+        <div style={{ textAlign: "center", padding: "10rem" }}><span className="spinner" /></div>
       ) : filtered.length === 0 ? (
-        <div className="card" style={{ textAlign: "center", padding: "6rem 2rem", borderStyle: "dashed", opacity: 0.8 }}>
-          <FiUsers style={{ fontSize: "3.5rem", color: "var(--t4)", marginBottom: "1.5rem" }} />
-          <h3 style={{ fontSize: "1.25rem", fontWeight: 900, color: "#fff", marginBottom: "0.5rem" }}>No customers found</h3>
-          <p style={{ color: "var(--t3)", marginBottom: "2.5rem", fontWeight: 500 }}>Start adding customers to manage their daily tiffins.</p>
-          <button className="btn-primary" style={{ margin: "0 auto" }} onClick={() => setShowAdd(true)}>+ Add Your First Customer</button>
+        <div className="card" style={{ textAlign: "center", padding: "8rem 2rem", borderStyle: "dashed", opacity: 0.8, background: "rgba(255,107,53,0.02)" }}>
+          <FiUsers style={{ fontSize: "4.5rem", color: "var(--t4)", marginBottom: "2rem" }} />
+          <h3 style={{ fontSize: "1.5rem", fontWeight: 950, color: "#fff", marginBottom: "0.75rem" }}>No Subscribers Yet</h3>
+          <p style={{ color: "var(--t3)", marginBottom: "3rem", fontWeight: 600, fontSize: "1.05rem" }}>Your customer list is currently empty. Start growing your tiffin business today.</p>
+          <button className="btn-primary" style={{ margin: "0 auto", padding: "1rem 2rem" }} onClick={() => setShowAdd(true)}>+ Add Your First Customer</button>
         </div>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "1.5rem" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(360px, 1fr))", gap: "2rem" }}>
           {filtered.map(r => (
-            <div key={r._id} className="card hover-lift-up" style={{ display: "flex", flexDirection: "column", gap: "1.5rem", background: "var(--s1)" }}>
+            <div key={r._id} className="card hover-lift-up" style={{ display: "flex", flexDirection: "column", gap: "2rem", background: "var(--s1)", border: "1px solid var(--bd)", padding: "2.25rem" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div>
-                  <h3 style={{ fontSize: "1.25rem", fontWeight: 900, color: "#fff", marginBottom: "0.25rem" }}>{r.displayName}</h3>
-                  {r.userId && <p style={{ fontSize: "0.85rem", color: "var(--brand)", fontWeight: 800 }}>@{r.userId.username}</p>}
+                  <h3 style={{ fontSize: "1.4rem", fontWeight: 950, color: "#fff", marginBottom: "0.4rem", letterSpacing: "-0.04em" }}>{r.displayName}</h3>
+                  {r.userId && (
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", color: "var(--brand)", fontWeight: 800, fontSize: "0.85rem" }}>
+                      <span style={{ width: 6, height: 6, background: "var(--brand)", borderRadius: "50%", boxShadow: "0 0 6px var(--brand)" }} />
+                      @{r.userId.username}
+                    </div>
+                  )}
                 </div>
-                <div style={{ display: "flex", gap: "0.5rem" }}>
-                  <Badge label={r.status === "linked" ? "Connected" : "Manual"} type={r.status === "linked" ? "info" : "default"} />
-                  <Badge label={r.tiffinStatus === "active" ? "Active" : "Hold"} type={r.tiffinStatus === "active" ? "success" : "warning"} />
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", alignItems: "flex-end" }}>
+                  <Badge label={r.status === "linked" ? "CONNECTED" : "MANUAL"} type={r.status === "linked" ? "info" : "default"} />
+                  <Badge label={r.tiffinStatus === "active" ? "ACTIVE" : "ON HOLD"} type={r.tiffinStatus === "active" ? "success" : "warning"} />
                 </div>
               </div>
 
-              {r.phone && (
-                <div style={{ fontSize: "0.9rem", color: "var(--t2)", display: "flex", alignItems: "center", gap: "0.75rem", fontWeight: 500 }}>
-                  <div style={{ width: 32, height: 32, background: "var(--s2)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid var(--bd)" }}>
-                    <FiPhone style={{ fontSize: "0.85rem", color: "var(--brand)" }} />
+              <div style={{ background: "var(--s2)", padding: "1.5rem", borderRadius: "var(--r3)", border: "1px solid var(--bd2)", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                  <div style={{ width: 36, height: 36, background: "var(--s1)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid var(--bd2)" }}>
+                    <FiPhone style={{ fontSize: "1rem", color: "var(--brand)" }} />
                   </div>
-                  {r.phone}
+                  <span style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--t1)" }}>{r.phone || "No Contact"}</span>
                 </div>
-              )}
+                
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
+                  <div>
+                    <p style={{ fontSize: "0.65rem", fontWeight: 900, color: "var(--t4)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.4rem" }}>Current Plan</p>
+                    <p style={{ fontWeight: 900, color: "#fff", fontSize: "1rem" }}>₹{r.mealPlan?.rate || 0} <span style={{ fontSize: "0.7rem", color: "var(--t3)", textTransform: "uppercase" }}>/ {r.mealPlan?.planType || "fixed"}</span></p>
+                  </div>
+                  <div>
+                    <p style={{ fontSize: "0.65rem", fontWeight: 900, color: "var(--t4)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.4rem" }}>Meals</p>
+                    <p style={{ fontWeight: 800, color: "var(--t2)", fontSize: "0.9rem" }}>{r.mealPlan?.meals?.join(", ") || "No Selection"}</p>
+                  </div>
+                </div>
+              </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "0.75rem", marginTop: "auto", paddingTop: "1.25rem", borderTop: "1px solid var(--bd)" }}>
-                <button className="btn-ghost" style={{ fontSize: "0.8rem", padding: "0.7rem" }} onClick={() => setEditRecord(r)}>
-                  <FiEdit2 /> Edit Plan
+              <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "1rem", marginTop: "auto" }}>
+                <button className="btn-ghost" style={{ fontSize: "0.9rem", height: "54px", fontWeight: 800, background: "rgba(255,107,53,0.05)", borderColor: "rgba(255,107,53,0.1)", color: "var(--brand)" }} onClick={() => setEditRecord(r)}>
+                  <FiEdit2 /> Manage Plan
                 </button>
-                <button className="btn-ghost" style={{ fontSize: "0.8rem", padding: "0.7rem", color: "var(--red)", borderColor: "rgba(239, 68, 68, 0.2)" }} onClick={() => removeCustomer(r._id, r.displayName)}>
+                <button className="btn-ghost" style={{ fontSize: "0.9rem", height: "54px", fontWeight: 800, color: "var(--red)", borderColor: "rgba(239, 68, 68, 0.15)" }} onClick={() => removeCustomer(r._id, r.displayName)}>
                   <FiTrash2 /> Delete
                 </button>
               </div>

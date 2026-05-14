@@ -3,11 +3,9 @@
 import { useState, useEffect, useRef } from "react";
 import { 
   FiCreditCard, FiUpload, FiX, 
-  FiSave, FiCheckCircle, FiInfo, FiSettings,
-  FiImage, FiCamera, FiLink
+  FiSave, FiInfo, FiCamera, FiLink
 } from "react-icons/fi";
 import { LuQrCode } from "react-icons/lu";
-import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 
 export default function ProviderSettings() {
@@ -67,7 +65,7 @@ export default function ProviderSettings() {
         body: JSON.stringify({ paymentUpiId: upiId }),
       });
       if (res.ok) {
-        toast.success("Payment settings saved.");
+        toast.success("Settings saved successfully!");
       } else {
         toast.error("Failed to save.");
       }
@@ -77,117 +75,99 @@ export default function ProviderSettings() {
   }
 
   return (
-    <div style={{ minHeight: "100%" }} className="animate-fade-in">
+    <div className="animate-fade-up">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "3rem" }}>
         <div>
-          <h1 style={{ fontSize: "2.5rem", fontWeight: 900, color: "#fff", marginBottom: "0.5rem", letterSpacing: "-0.04em" }}>Settings</h1>
-          <p style={{ color: "var(--text-secondary)", fontSize: "1.1rem" }}>Configure your payment and business preferences.</p>
+          <h1 style={{ fontSize: "2.5rem", fontWeight: 950, color: "#fff", marginBottom: "0.5rem" }}>Settings</h1>
+          <p style={{ color: "var(--t2)", fontSize: "1.1rem", fontWeight: 500 }}>Configure your payment and business profile.</p>
         </div>
-        <button className="btn-primary" style={{ width: "auto", padding: "0.75rem 1.5rem" }} onClick={saveSettings} disabled={saving}>
-          {saving ? <span className="spinner" /> : <><FiSave /> Save All Changes</>}
+        <button className="btn-primary" style={{ padding: "0.85rem 1.75rem" }} onClick={saveSettings} disabled={saving}>
+          {saving ? <span className="spinner" /> : <><FiSave /> Save Changes</>}
         </button>
       </div>
 
       <div style={{ maxWidth: "800px", display: "flex", flexDirection: "column", gap: "2.5rem" }}>
-        
         {loading ? (
-          <div style={{ textAlign: "center", padding: "5rem" }}><span className="spinner" /></div>
+          <div style={{ textAlign: "center", padding: "10rem" }}><span className="spinner" /></div>
         ) : (
           <>
             {/* UPI ID Section */}
-            <section className="card">
-              <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "2rem" }}>
-                <div style={{ width: 48, height: 48, background: "rgba(99, 102, 241, 0.1)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--brand-primary)" }}>
+            <section className="card" style={{ background: "var(--s1)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "1.25rem", marginBottom: "2.5rem" }}>
+                <div style={{ width: 48, height: 48, background: "rgba(255,107,53,0.08)", borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--brand)", border: "1px solid rgba(255,107,53,0.15)" }}>
                   <FiCreditCard style={{ fontSize: "1.5rem" }} />
                 </div>
                 <div>
-                  <h2 style={{ fontSize: "1.25rem", fontWeight: 800, color: "#fff" }}>Payment Acceptance</h2>
-                  <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem" }}>Set your UPI details for receiving payments from customers.</p>
+                  <h2 style={{ fontSize: "1.35rem", fontWeight: 900, color: "#fff" }}>Payment Acceptance</h2>
+                  <p style={{ color: "var(--t3)", fontSize: "0.95rem", fontWeight: 500 }}>Receive direct UPI payments from subscribers.</p>
                 </div>
               </div>
               
-              <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-                <div>
-                  <label className="field-label">Your UPI ID (VPA)</label>
-                  <div style={{ position: "relative" }}>
-                    <FiLink style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
-                    <input 
-                      className="field-input" 
-                      style={{ paddingLeft: "3rem" }} 
-                      placeholder="e.g. business@okaxis" 
-                      value={upiId} 
-                      onChange={e => setUpiId(e.target.value)} 
-                    />
-                  </div>
-                  <p style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "0.75rem", lineHeight: 1.5 }}>
-                    Customers will use this ID to make direct UPI payments. Ensure this is correct to avoid payment failures.
-                  </p>
+              <div>
+                <label className="field-label" style={{ fontWeight: 900, fontSize: "0.75rem", color: "var(--t2)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.75rem" }}>UPI ID (VPA)</label>
+                <div style={{ position: "relative" }}>
+                  <FiLink style={{ position: "absolute", left: 18, top: "50%", transform: "translateY(-50%)", color: "var(--brand)", fontSize: "1.1rem" }} />
+                  <input 
+                    className="field-input" 
+                    style={{ paddingLeft: "3.5rem", height: "60px", fontSize: "1.1rem", fontWeight: 700 }} 
+                    placeholder="e.g. username@upi" 
+                    value={upiId} 
+                    onChange={e => setUpiId(e.target.value)} 
+                  />
+                </div>
+                <div style={{ marginTop: "1.25rem", padding: "1rem", background: "var(--s2)", borderRadius: 12, border: "1px solid var(--bd)", display: "flex", gap: "0.8rem" }}>
+                   <FiInfo style={{ color: "var(--brand)", marginTop: "0.1rem" }} />
+                   <p style={{ fontSize: "0.85rem", color: "var(--t3)", fontWeight: 500 }}>This ID will be used for all one-click payment links generated for your customers.</p>
                 </div>
               </div>
             </section>
 
             {/* QR Code Section */}
-            <section className="card">
-              <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "2rem" }}>
-                <div style={{ width: 48, height: 48, background: "rgba(99, 102, 241, 0.1)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--brand-primary)" }}>
+            <section className="card" style={{ background: "var(--s1)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "1.25rem", marginBottom: "2.5rem" }}>
+                <div style={{ width: 48, height: 48, background: "rgba(255,107,53,0.08)", borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--brand)", border: "1px solid rgba(255,107,53,0.15)" }}>
                   <LuQrCode style={{ fontSize: "1.5rem" }} />
                 </div>
                 <div>
-                  <h2 style={{ fontSize: "1.25rem", fontWeight: 800, color: "#fff" }}>Display QR Code</h2>
-                  <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem" }}>Upload your static UPI QR code for easier payments.</p>
+                  <h2 style={{ fontSize: "1.35rem", fontWeight: 900, color: "#fff" }}>Display QR Code</h2>
+                  <p style={{ color: "var(--t3)", fontSize: "0.95rem", fontWeight: 500 }}>Upload your static UPI QR code for visual verification.</p>
                 </div>
               </div>
               
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2rem" }}>
                 {qrUrl ? (
-                  <div style={{ position: "relative", padding: "1.5rem", background: "#fff", borderRadius: "var(--radius-lg)", border: "1px solid var(--border)", boxShadow: "0 12px 40px rgba(0,0,0,0.3)" }}>
-                    <img src={qrUrl} alt="QR" style={{ width: "260px", height: "260px", objectFit: "contain" }} />
+                  <div style={{ position: "relative", padding: "1.5rem", background: "#fff", borderRadius: "var(--r3)", border: "4px solid var(--s2)", boxShadow: "0 20px 50px rgba(0,0,0,0.5)" }}>
+                    <img src={qrUrl} alt="QR" style={{ width: "280px", height: "280px", objectFit: "contain" }} />
                     <button 
                       onClick={() => { setQrUrl(""); setQrKey(""); }} 
                       style={{ 
-                        position: "absolute", top: -12, right: -12, background: "var(--brand-error)", color: "#fff", 
-                        border: "none", borderRadius: "50%", width: 36, height: 36, display: "flex", 
+                        position: "absolute", top: -15, right: -15, background: "var(--red)", color: "#fff", 
+                        border: "none", borderRadius: "50%", width: 40, height: 40, display: "flex", 
                         alignItems: "center", justifyContent: "center", cursor: "pointer", 
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.3)", transition: "all 0.2s"
+                        boxShadow: "0 8px 24px rgba(239,68,68,0.4)", transition: "all 0.2s"
                       }}
-                      onMouseEnter={e => e.currentTarget.style.transform = "scale(1.1)"}
-                      onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
                     >
-                      <FiX style={{ fontSize: "1.2rem" }} />
+                      <FiX style={{ fontSize: "1.4rem" }} />
                     </button>
                   </div>
                 ) : (
                   <button 
                     onClick={() => fileInputRef.current?.click()} 
                     style={{ 
-                      width: "100%", border: "2px dashed var(--border)", borderRadius: "var(--radius-lg)", 
-                      padding: "4rem 2rem", display: "flex", flexDirection: "column", alignItems: "center", 
-                      cursor: "pointer", background: "var(--surface-2)", transition: "all 0.3s",
-                      borderColor: uploading ? "var(--brand-primary)" : "var(--border)"
+                      width: "100%", border: "2px dashed var(--bd)", borderRadius: "var(--r3)", 
+                      padding: "5rem 2rem", display: "flex", flexDirection: "column", alignItems: "center", 
+                      cursor: "pointer", background: "var(--s2)", transition: "all 0.3s"
                     }}
-                    onMouseEnter={e => e.currentTarget.style.borderColor = "var(--brand-primary)"}
-                    onMouseLeave={e => !uploading && (e.currentTarget.style.borderColor = "var(--border)")}
                   >
-                    <div style={{ width: 64, height: 64, background: "var(--surface-3)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "1.5rem" }}>
-                      <FiCamera style={{ fontSize: "2rem", color: "var(--text-muted)" }} />
+                    <div style={{ width: 72, height: 72, background: "rgba(255,107,53,0.05)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "1.5rem", border: "1px solid var(--bd)" }}>
+                      <FiCamera style={{ fontSize: "2.5rem", color: "var(--t4)" }} />
                     </div>
-                    <span style={{ fontWeight: 800, fontSize: "1.25rem", color: "#fff" }}>{uploading ? "Uploading QR..." : "Click to Upload QR Image"}</span>
-                    <span style={{ fontSize: "0.9rem", color: "var(--text-muted)", marginTop: "0.75rem" }}>Supported formats: JPG, PNG (Max 5MB)</span>
+                    <span style={{ fontWeight: 900, fontSize: "1.4rem", color: "#fff" }}>{uploading ? "Uploading QR..." : "Click to Upload QR Image"}</span>
+                    <span style={{ fontSize: "0.95rem", color: "var(--t4)", marginTop: "0.75rem", fontWeight: 600 }}>JPG, PNG or WEBP (Max 5MB)</span>
                   </button>
                 )}
                 
                 <input type="file" accept="image/*" style={{ display: "none" }} ref={fileInputRef} onChange={handleUpload} />
-                
-                <div style={{ 
-                  padding: "1.25rem", background: "rgba(99, 102, 241, 0.05)", border: "1px solid rgba(99, 102, 241, 0.2)", 
-                  borderRadius: "var(--radius-md)", display: "flex", gap: "1rem", alignItems: "flex-start" 
-                }}>
-                  <FiInfo style={{ color: "var(--brand-primary)", fontSize: "1.25rem", marginTop: "0.2rem", flexShrink: 0 }} />
-                  <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: 1.6 }}>
-                    This QR code will be displayed to your customers when they pay via the TiffinPro app. 
-                    Ensure it&apos;s a clear screenshot from your UPI app.
-                  </p>
-                </div>
               </div>
             </section>
           </>

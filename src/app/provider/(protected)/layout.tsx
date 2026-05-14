@@ -44,12 +44,12 @@ export default async function ProtectedProviderLayout({
         <SidebarNav />
 
         <div className="sidebar-bottom">
-          <div style={{ marginBottom: "1rem" }}>
-            <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "#fff" }}>{user.displayName ?? user.username}</div>
-            <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>@{user.username}</div>
+          <div style={{ marginBottom: "1.25rem", padding: "0 0.5rem" }}>
+            <div style={{ fontSize: "0.9rem", fontWeight: 800, color: "#fff", marginBottom: "0.2rem" }}>{user.displayName ?? user.username}</div>
+            <div style={{ fontSize: "0.75rem", color: "var(--t3)", fontWeight: 600 }}>@{user.username}</div>
           </div>
           <form action={async () => { "use server"; await signOut({ redirectTo: "/login" }); }}>
-            <button type="submit" className="nav-item" style={{ width: "100%", background: "var(--s2)", border: "1px solid var(--bd)", cursor: "pointer", color: "var(--t3)" }}>
+            <button type="submit" className="nav-item" style={{ width: "100%", margin: 0, background: "var(--s2)", justifyContent: "center" }}>
               <FiLogOut /> Sign out
             </button>
           </form>
