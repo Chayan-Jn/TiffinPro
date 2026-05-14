@@ -3,10 +3,10 @@ import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
+import { authConfig } from "./auth.config";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  session: { strategy: "jwt" },
-
+  ...authConfig,
   providers: [
     Credentials({
       name: "credentials",
@@ -28,7 +28,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const passwordMatch = await bcrypt.compare(password, user.passwordHash);
         if (!passwordMatch) return null;
 
-        // Return object — NextAuth encodes this into the JWT
         return {
           id: String(user._id),
           username: user.username,
@@ -38,29 +37,4 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
-
-  callbacks: {
-    async jwt({ token, user }) {
-      // `user` is only present on first sign-in
-      if (user) {
-        token.userId = user.id;
-        token.username = (user as { username: string }).username;
-        token.role = (user as { role: string }).role;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      if (token) {
-        session.user.id = token.userId as string;
-        (session.user as { username: string }).username = token.username as string;
-        (session.user as { role: string }).role = token.role as string;
-      }
-      return session;
-    },
-  },
-
-  pages: {
-    signIn: "/login",
-    error: "/login",
-  },
 });

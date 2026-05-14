@@ -1,5 +1,8 @@
-import { auth } from "@/auth";
+import NextAuth from "next-auth";
+import { authConfig } from "@/auth.config";
 import { NextRequest, NextResponse } from "next/server";
+
+const { auth } = NextAuth(authConfig);
 
 // Routes that logged-in users shouldn't see (redirect to their dashboard)
 const AUTH_ROUTES = ["/login", "/register", "/"];
@@ -10,7 +13,7 @@ const ROLE_HOME: Record<string, string> = {
   customer: "/customer/home",
 };
 
-export default auth(function middleware(req: NextRequest & { auth: { user: { role: string } } | null }) {
+export default auth(function middleware(req: NextRequest & { auth: any }) {
   const { pathname } = req.nextUrl;
   const session = req.auth;
   const role = session?.user?.role;
