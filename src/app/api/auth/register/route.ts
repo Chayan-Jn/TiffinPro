@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
 
     const passwordHash = await bcrypt.hash(password, 12);
 
-    let subscriptionExpiry = null;
+    let subscriptionExpiry: Date | undefined = undefined;
     if (role === "provider") {
       subscriptionExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
     }

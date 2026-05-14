@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { 
-  FiUtensils, FiCalendar, FiImage, FiPlus, 
+  FiCalendar, FiImage, FiPlus, 
   FiTrash2, FiUpload, FiX, FiSave, FiCheckCircle, 
-  FiClipboard, FiTarget 
+  FiClipboard
 } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";

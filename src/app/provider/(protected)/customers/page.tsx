@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { 
-  FiUsers, FiSearch, FiPlus, FiEdit2, FiLink, 
-  FiTrash2, FiUserCheck, FiUserPlus, FiInfo,
-  FiPhone, FiMoreVertical, FiX, FiChevronLeft,
-  FiAlertCircle, FiCheckCircle, FiCheck, FiSave
+  FiUsers, FiSearch, FiPlus, FiEdit2, 
+  FiTrash2, FiUserPlus,
+  FiPhone, FiX,
+  FiSave
 } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";

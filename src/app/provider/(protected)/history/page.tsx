@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { 
-  FiBook, FiCalendar, FiFilter, 
-  FiSearch, FiArrowLeftRight, FiCheckCircle, FiXCircle, FiClock
+  FiCheckCircle, FiXCircle, FiClock
 } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 

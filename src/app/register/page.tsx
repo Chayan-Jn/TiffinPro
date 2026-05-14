@@ -4,7 +4,8 @@ import { useState, useEffect, Suspense } from "react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { FiZap, FiUser, FiChefHat, FiArrowRight, FiLock, FiCheckCircle } from "react-icons/fi";
+import { FiZap, FiUser, FiArrowRight, FiLock, FiCheckCircle } from "react-icons/fi";
+import { LuChefHat } from "react-icons/lu";
 import { toast } from "react-hot-toast";
 
 function RegisterForm() {
@@ -82,7 +83,7 @@ function RegisterForm() {
             <label className="field-label">Account Type</label>
             <div className="role-toggle" style={{ height: "50px" }}>
               <button type="button" className={`role-btn ${role === "provider" ? "active" : ""}`} onClick={() => setRole("provider")}>
-                <FiChefHat style={{ marginRight: "0.5rem" }} /> Provider
+                <LuChefHat style={{ marginRight: "0.5rem" }} /> Provider
               </button>
               <button type="button" className={`role-btn ${role === "customer" ? "active" : ""}`} onClick={() => setRole("customer")}>
                 <FiUser style={{ marginRight: "0.5rem" }} /> Customer

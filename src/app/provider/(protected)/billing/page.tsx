@@ -2,10 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { 
-  FiCreditCard, FiClock, FiPlus, FiChevronRight, 
-  FiCheckCircle, FiAlertCircle, FiFileText,
-  FiExternalLink, FiMoreVertical, FiArrowRight,
-  FiLoader, FiZap
+  FiClock, FiCheckCircle, FiAlertCircle, FiFileText,
+  FiZap
 } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 

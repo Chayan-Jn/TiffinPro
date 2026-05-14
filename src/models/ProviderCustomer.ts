@@ -8,6 +8,7 @@ export interface IProviderCustomer extends Document {
   status: "unlinked" | "linked";
   tiffinStatus: "active" | "on_hold";
   notes: string;
+  previousUserId?: Types.ObjectId | null;
   // True when a newly-connected customer's name closely matches this
   // manual record — shown as a ⚠️ duplicate warning on the provider side
   possibleDuplicateOf: Types.ObjectId | null;

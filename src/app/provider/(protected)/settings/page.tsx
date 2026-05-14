@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useRef } from "react";
 import { 
-  FiCreditCard, FiQrCode, FiUpload, FiX, 
+  FiCreditCard, FiUpload, FiX, 
   FiSave, FiCheckCircle, FiInfo, FiSettings,
   FiImage, FiCamera, FiLink
 } from "react-icons/fi";
+import { LuQrCode } from "react-icons/lu";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 
@@ -129,7 +130,7 @@ export default function ProviderSettings() {
             <section className="card">
               <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "2rem" }}>
                 <div style={{ width: 48, height: 48, background: "rgba(99, 102, 241, 0.1)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--brand-primary)" }}>
-                  <FiQrCode style={{ fontSize: "1.5rem" }} />
+                  <LuQrCode style={{ fontSize: "1.5rem" }} />
                 </div>
                 <div>
                   <h2 style={{ fontSize: "1.25rem", fontWeight: 800, color: "#fff" }}>Display QR Code</h2>

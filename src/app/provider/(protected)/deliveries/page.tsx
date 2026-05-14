@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { 
-  LuTruck, LuChevronLeft, LuCheckCircle2, LuXCircle, 
-  LuMinus, LuPlus, LuHistory, LuCalendar, LuChefHat,
+  LuMinus, LuPlus, LuCalendar, LuChefHat,
   LuCircleCheck, LuCircleX, LuRotateCcw
 } from "react-icons/lu";
 import { useRouter } from "next/navigation";
