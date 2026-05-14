@@ -5,6 +5,7 @@ export interface IUser extends Document {
   passwordHash: string;
   role: "provider" | "customer";
   displayName: string;
+  menuImageUrl?: string; // For providers: URL to the static mess menu photo
   createdAt: Date;
   updatedAt: Date;
 }
@@ -35,6 +36,10 @@ const UserSchema = new Schema<IUser>(
       required: true,
       trim: true,
       maxlength: 60,
+    },
+    menuImageUrl: {
+      type: String,
+      default: "",
     },
   },
   { timestamps: true }

@@ -1,5 +1,5 @@
 import NextAuth from "next-auth";
-import type { DefaultSession, DefaultJWT } from "next-auth";
+import type { DefaultSession } from "next-auth";
 
 // Extend the built-in types to include our custom fields
 declare module "next-auth" {
@@ -18,10 +18,3 @@ declare module "next-auth" {
   }
 }
 
-declare module "next-auth/jwt" {
-  interface JWT extends DefaultJWT {
-    userId: string;
-    username: string;
-    role: "provider" | "customer";
-  }
-}
