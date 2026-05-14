@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
+import { getPresignedGetUrl } from "@/lib/s3";
 import { z } from "zod";
 
 const Schema = z.object({
-  menuImageUrl: z.string().url(),
+  menuImageUrl: z.string(),
 });
 
 export async function PATCH(request: NextRequest) {
@@ -23,5 +24,12 @@ export async function PATCH(request: NextRequest) {
   await connectDB();
   await User.findByIdAndUpdate(session.user.id, { menuImageUrl: parsed.data.menuImageUrl });
 
-  return NextResponse.json({ success: true, menuImageUrl: parsed.data.menuImageUrl });
+  let signedUrl = "";
+  if (parsed.data.menuImageUrl) {
+    let key = parsed.data.menuImageUrl;
+    if (key.includes('/')) key = key.split('/').pop() || key;
+    signedUrl = await getPresignedGetUrl(key);
+  }
+
+  return NextResponse.json({ success: true, menuImageUrl: signedUrl });
 }

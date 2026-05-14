@@ -209,7 +209,7 @@ function ProviderDetailsModal({ record, onClose }: { record: ProviderRecord, onC
             {loading ? (
               <p style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>Loading...</p>
             ) : menuImg ? (
-              <img src={menuImg} alt="Mess Menu" style={{ width: "100%", borderRadius: "var(--radius-md)", border: "1px solid var(--border)" }} />
+              <img src={menuImg} alt="Mess Menu" style={{ width: "100%", maxHeight: "60vh", objectFit: "contain", borderRadius: "var(--radius-md)", border: "1px solid var(--border)", background: "var(--surface-0)" }} />
             ) : (
               <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", fontStyle: "italic", background: "var(--surface-2)", padding: "1rem", borderRadius: "var(--radius-md)", border: "1px dashed var(--border)" }}>Provider hasn&apos;t uploaded a photo menu.</p>
             )}

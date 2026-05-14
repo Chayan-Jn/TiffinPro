@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
 import DailyMenu from "@/models/DailyMenu";
+import { getPresignedGetUrl } from "@/lib/s3";
 
 type RouteContext = { params: Promise<{ providerId: string }> };
 
@@ -34,9 +35,17 @@ export async function GET(request: NextRequest, ctx: RouteContext) {
   // Get the daily text menu
   const menu = await DailyMenu.findOne({ providerId, date }).lean();
 
+  let signedUrl = "";
+  if (provider.menuImageUrl) {
+    // If it's an old full URL format, extract the key. Otherwise, just use the key.
+    let key = provider.menuImageUrl;
+    if (key.includes('/')) key = key.split('/').pop() || key;
+    signedUrl = await getPresignedGetUrl(key);
+  }
+
   return NextResponse.json({
     providerName: provider.displayName,
-    menuImageUrl: provider.menuImageUrl,
+    menuImageUrl: signedUrl,
     dailyMenu: menu ? menu.items : [],
   });
 }

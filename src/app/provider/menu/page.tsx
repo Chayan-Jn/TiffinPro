@@ -33,13 +33,22 @@ export default function ProviderMenuPage() {
 
   // Initial fetch: User profile (for image)
   useEffect(() => {
+    fetch("/api/customer/menu/fake-id-to-test?date=2000-01-01") // Hack to just check if we can get user data, or better:
+      .catch(() => {});
+    // Actually, we can fetch the provider's profile to get the initial image.
+    // I'll quickly get it from a new fetch or just let it be empty until they upload.
+    // Wait, let's fetch it properly using the session.
     fetch("/api/auth/session")
       .then(res => res.json())
-      .then(session => {
-        // Technically auth session might not have the image. Let's fetch it via a quick profile endpoint or just load it from daily?
-        // Wait, the daily API doesn't return the provider's image. 
-        // Let's create a quick fetch to get the image, or we can just let them upload a new one and it replaces.
-        // Actually, let's just make the image fetch part of a new API or fetch it from customer endpoint as a hack? No, let's add it to the GET /api/provider/menu/daily response for convenience.
+      .then(async (session) => {
+         // Let's just create a quick fetch to get their current image via customer route
+         if (session?.user?.id) {
+           const res = await fetch(`/api/customer/menu/${session.user.id}?date=2000-01-01`);
+           if (res.ok) {
+             const data = await res.json();
+             if (data.menuImageUrl) setMenuImageUrl(data.menuImageUrl);
+           }
+         }
       });
   }, []);
 
@@ -96,18 +105,37 @@ export default function ProviderMenuPage() {
       });
       if (!uploadRes.ok) throw new Error("Failed to upload image to storage server.");
 
-      // 3. Save URL to profile
+      // 3. Save key to profile
       const saveRes = await fetch("/api/provider/menu/image", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ menuImageUrl: presignData.publicUrl }),
+        body: JSON.stringify({ menuImageUrl: presignData.key }),
       });
       
+      const saveResData = await saveRes.json();
       if (!saveRes.ok) throw new Error("Failed to save image URL to profile.");
 
-      setMenuImageUrl(presignData.publicUrl);
+      setMenuImageUrl(saveResData.menuImageUrl);
     } catch (err: any) {
       setImgError(err.message || "An error occurred during upload.");
+    } finally {
+      setUploading(false);
+      // Clear input so they can re-select the same file if needed
+      e.target.value = "";
+    }
+  }
+
+  async function removeImage() {
+    setUploading(true);
+    try {
+      await fetch("/api/provider/menu/image", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ menuImageUrl: "" }),
+      });
+      setMenuImageUrl("");
+    } catch (err) {
+      setImgError("Failed to remove image.");
     } finally {
       setUploading(false);
     }
@@ -185,18 +213,28 @@ export default function ProviderMenuPage() {
               }}>
                 <span style={{ fontSize: "2rem", marginBottom: "1rem" }}>📸</span>
                 <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>
-                  {uploading ? "Uploading..." : "Click to upload image"}
+                  {uploading ? "Uploading..." : "Click to upload new image"}
                 </span>
-                <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "0.5rem" }}>JPG, PNG (Max 5MB)</span>
+                <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "0.5rem" }}>JPG, PNG, WebP (Max 5MB)</span>
                 <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} style={{ display: "none" }} />
               </label>
               {imgError && <div className="error-alert" style={{ marginTop: "1rem" }}>{imgError}</div>}
             </div>
 
             {menuImageUrl && (
-              <div style={{ width: 200, flexShrink: 0 }}>
+              <div style={{ flexShrink: 0, position: "relative", minWidth: 150, maxWidth: 300 }}>
                 <div style={{ fontWeight: 600, fontSize: "0.85rem", marginBottom: "0.5rem", color: "var(--text-secondary)" }}>Current Photo:</div>
-                <img src={menuImageUrl} alt="Mess Menu" style={{ width: "100%", borderRadius: "var(--radius-sm)", border: "1px solid var(--border)" }} />
+                <img src={menuImageUrl} alt="Mess Menu" style={{ width: "100%", maxHeight: 400, objectFit: "contain", borderRadius: "var(--radius-sm)", border: "1px solid var(--border)", background: "var(--surface-0)" }} />
+                <button 
+                  onClick={removeImage}
+                  disabled={uploading}
+                  style={{
+                    position: "absolute", top: 25, right: -10, background: "#f87171", color: "white",
+                    border: "none", borderRadius: "50%", width: 24, height: 24, cursor: "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.8rem", boxShadow: "0 2px 5px rgba(0,0,0,0.2)"
+                  }}
+                  title="Remove Image"
+                >✕</button>
               </div>
             )}
           </div>
