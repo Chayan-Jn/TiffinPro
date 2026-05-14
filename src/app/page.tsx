@@ -34,7 +34,7 @@ export default async function LandingPage() {
           <span style={{ fontWeight: 900, fontSize: "1.5rem", letterSpacing: "-0.04em" }}>TiffinPro</span>
         </div>
         <div style={{ display: "flex", gap: "1.5rem", alignItems: "center" }}>
-          <Link href="/login" style={{ fontWeight: 600, color: "var(--text-secondary)", transition: "color 0.2s" }} onMouseEnter={e => e.currentTarget.style.color = "#fff"} onMouseLeave={e => e.currentTarget.style.color = "var(--text-secondary)"}>Sign In</Link>
+          <Link href="/login" className="hover-white" style={{ fontWeight: 600, color: "var(--text-secondary)", transition: "color 0.2s" }}>Sign In</Link>
           <Link href="/register" className="btn-primary" style={{ width: "auto", padding: "0.7rem 1.6rem", borderRadius: 12 }}>Get Started</Link>
         </div>
       </nav>
@@ -64,11 +64,11 @@ export default async function LandingPage() {
           <Link href="/register?role=provider" className="btn-primary" style={{ width: "auto", padding: "1rem 2.5rem", fontSize: "1.1rem", borderRadius: 16 }}>
             Start Free Trial <FiArrowRight style={{ marginLeft: "0.5rem" }} />
           </Link>
-          <Link href="/register?role=customer" style={{ 
+          <Link href="/register?role=customer" className="hover-bg-light" style={{ 
             width: "auto", padding: "1rem 2.5rem", fontSize: "1.1rem", borderRadius: 16, 
             background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)", 
             color: "#fff", fontWeight: 700, backdropFilter: "blur(10px)", transition: "all 0.3s" 
-          }} onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.08)"} onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,0.03)"}>
+          }}>
             Find a Provider
           </Link>
         </div>
@@ -96,7 +96,7 @@ export default async function LandingPage() {
             color: "#4f46e5"
           }
         ].map((f, i) => (
-          <div key={i} className="card animate-fade-up" style={{ padding: "3rem 2rem", background: "rgba(255,255,255,0.02)", transition: "transform 0.3s" }} onMouseEnter={e => e.currentTarget.style.transform = "translateY(-10px)"} onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}>
+          <div key={i} className="card animate-fade-up hover-lift-up" style={{ padding: "3rem 2rem", background: "rgba(255,255,255,0.02)" }}>
             <div style={{ width: 56, height: 56, borderRadius: 16, background: `${f.color}20`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.8rem", color: f.color, marginBottom: "2rem", border: `1px solid ${f.color}40` }}>
               {f.icon}
             </div>

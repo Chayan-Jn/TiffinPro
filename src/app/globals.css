@@ -450,4 +450,8 @@ button { cursor: pointer; }
 /* ── Scrollbar ────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--s4); border-radius: 99px; }
+/* ── Utility Hovers (for Server Components) ─────────── */
+.hover-white:hover { color: #fff !important; }
+.hover-bg-light:hover { background: rgba(255,255,255,0.08) !important; }
+.hover-lift-up { transition: all 0.3s ease; }
+.hover-lift-up:hover { transform: translateY(-10px) !important; }
