@@ -20,6 +20,11 @@ const NAV = [
 export default function SidebarNav() {
   const pathname = usePathname();
 
+  const closeSidebar = () => {
+    const sidebar = document.querySelector(".sidebar");
+    if (sidebar) sidebar.classList.remove("open");
+  };
+
   return (
     <div style={{ padding: "0.75rem 0", flex: 1, display: "flex", flexDirection: "column", gap: "0.25rem" }}>
       <div className="sidebar-section">Management</div>
@@ -30,6 +35,7 @@ export default function SidebarNav() {
             key={n.href} 
             href={n.href} 
             className={`nav-item ${isActive ? "active" : ""}`}
+            onClick={closeSidebar}
           >
             {n.icon}
             {n.label}
@@ -41,6 +47,7 @@ export default function SidebarNav() {
       <Link 
         href="/provider/subscription" 
         className={`nav-item special ${pathname === "/provider/subscription" ? "active" : ""}`}
+        onClick={closeSidebar}
       >
         <LuStar />
         Subscription

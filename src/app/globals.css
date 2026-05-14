@@ -185,7 +185,7 @@ h1, h2, h3, h4 { font-weight: 900; letter-spacing: -0.04em; line-height: 1.1; }
 .app-shell { display: flex; min-height: 100dvh; }
 
 .sidebar {
-  width: 250px;
+  width: 280px;
   background: var(--s1);
   border-right: 1px solid var(--bd);
   display: flex;
@@ -193,8 +193,8 @@ h1, h2, h3, h4 { font-weight: 900; letter-spacing: -0.04em; line-height: 1.1; }
   position: fixed;
   top: 0; bottom: 0; left: 0;
   z-index: 50;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
 .nav-item {
   display: flex;
   align-items: center;
@@ -220,6 +220,38 @@ h1, h2, h3, h4 { font-weight: 900; letter-spacing: -0.04em; line-height: 1.1; }
   flex: 1;
   padding: 3rem;
   min-width: 0;
+  transition: all 0.3s ease;
+}
+
+@media (max-width: 1024px) {
+  .sidebar {
+    transform: translateX(-280px);
+  }
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  .main-content {
+    margin-left: 0;
+    padding: 1.5rem;
+    padding-top: 5rem; /* Space for mobile header */
+  }
+  .mobile-header {
+    display: flex !important;
+  }
+}
+
+.mobile-header {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 64px;
+  background: rgba(5, 5, 5, 0.8);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--bd);
+  z-index: 40;
+  align-items: center;
+  padding: 0 1.5rem;
+  justify-content: space-between;
 }
 
 .top-bar {

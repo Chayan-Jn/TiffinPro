@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import Script from "next/script";
+import { FiCheck, FiZap, FiCalendar, FiArrowRight, FiShield } from "react-icons/fi";
+import { LuUtensils } from "react-icons/lu";
 
 declare global {
   interface Window {
@@ -46,7 +48,6 @@ export default function ProviderSubscriptionPage() {
   const handlePayment = async (plan: "monthly" | "yearly") => {
     setPayingPlan(plan);
     try {
-      // 1. Create order
       const orderRes = await fetch("/api/provider/subscription/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -58,16 +59,14 @@ export default function ProviderSubscriptionPage() {
         throw new Error(orderData.error || "Failed to create order");
       }
 
-      // 2. Open Razorpay
       const options = {
         key: orderData.keyId,
         amount: orderData.amount,
         currency: "INR",
-        name: "TiffinPro SaaS",
-        description: `TiffinPro ${plan.charAt(0).toUpperCase() + plan.slice(1)} Subscription`,
+        name: "TiffinPro Premium",
+        description: `TiffinPro ${plan.charAt(0).toUpperCase() + plan.slice(1)} Access`,
         order_id: orderData.orderId,
         handler: async function (response: any) {
-          // 3. Verify Payment
           const verifyRes = await fetch("/api/provider/subscription/verify", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -75,7 +74,7 @@ export default function ProviderSubscriptionPage() {
           });
           const verifyData = await verifyRes.json();
           if (verifyData.success) {
-            toast.success("Payment successful! Your subscription has been renewed.");
+            toast.success("Welcome to TiffinPro Premium!");
             fetchData();
             router.push("/provider/dashboard");
           } else {
@@ -83,7 +82,7 @@ export default function ProviderSubscriptionPage() {
           }
         },
         theme: {
-          color: "#f97316", // brand-orange
+          color: "#FF6B35",
         },
       };
 
@@ -100,141 +99,158 @@ export default function ProviderSubscriptionPage() {
   };
 
   return (
-    <>
+    <div className="animate-fade-up">
       <Script src="https://checkout.razorpay.com/v1/checkout.js" />
-      <div style={{ minHeight: "100dvh", background: "var(--surface-0)", padding: "2rem" }}>
-        <div style={{ maxWidth: 800, margin: "0 auto" }}>
-          
-          <div style={{ textAlign: "center", marginBottom: "3rem" }}>
-            <h1 style={{ fontSize: "2rem", fontWeight: 800, color: "var(--text-primary)" }}>TiffinPro Subscription</h1>
-            <p style={{ color: "var(--text-secondary)", marginTop: "0.5rem" }}>Manage your SaaS access and billing</p>
+      <div style={{ maxWidth: 900, margin: "0 auto", padding: "2rem 0" }}>
+        
+        <div style={{ textAlign: "center", marginBottom: "4rem" }}>
+          <div style={{ width: 64, height: 64, background: "var(--brand)", borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1.5rem", boxShadow: "0 12px 24px var(--brand-glow)" }}>
+            <LuUtensils style={{ color: "#fff", fontSize: "2rem" }} />
           </div>
-
-          {loading ? (
-            <p style={{ textAlign: "center", color: "var(--text-muted)", padding: "3rem" }}>Loading subscription data...</p>
-          ) : (
-            <>
-              {/* Status Banner */}
-              <div style={{
-                background: isExpired ? "rgba(248,113,113,0.1)" : "rgba(52,211,153,0.1)",
-                border: `1px solid ${isExpired ? "rgba(248,113,113,0.3)" : "rgba(52,211,153,0.3)"}`,
-                borderRadius: "var(--radius-lg)",
-                padding: "1.5rem 2rem",
-                marginBottom: "3rem",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center"
-              }}>
-                <div>
-                  <div style={{ fontSize: "1.2rem", fontWeight: 800, color: isExpired ? "#f87171" : "#10b981", marginBottom: "0.25rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                    {isExpired ? "Subscription Expired" : isActiveTrial ? "7-Day Free Trial Active" : "Subscription Active"}
-                    {isActiveTrial && <span style={{ background: "rgba(16,185,129,0.2)", padding: "2px 8px", borderRadius: 20, fontSize: "0.7rem", fontWeight: 800, textTransform: "uppercase" }}>Trial</span>}
-                  </div>
-                  <div style={{ color: "var(--text-secondary)" }}>
-                    {expiry ? (
-                      <>Valid until <strong style={{ color: "var(--text-primary)" }}>{expiry.toLocaleDateString()}</strong></>
-                    ) : (
-                      "No active subscription found."
-                    )}
-                  </div>
-                </div>
-                {!isExpired && (
-                  <button onClick={() => router.push("/provider/dashboard")} className="btn-primary" style={{ width: "auto" }}>
-                    Go to Dashboard →
-                  </button>
-                )}
-              </div>
-
-              {/* Pricing Plans */}
-              <h2 style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--text-primary)", marginBottom: "1.5rem" }}>Select a Plan</h2>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem", marginBottom: "4rem" }}>
-                
-                {/* Monthly */}
-                <div style={{
-                  background: "var(--surface-1)", border: "1px solid var(--border)", borderRadius: "var(--radius-lg)",
-                  padding: "2rem", display: "flex", flexDirection: "column", gap: "1rem"
-                }}>
-                  <div>
-                    <div style={{ fontSize: "1.2rem", fontWeight: 800, color: "var(--text-primary)" }}>Monthly Plan</div>
-                    <div style={{ color: "var(--text-muted)" }}>30 days access</div>
-                  </div>
-                  <div style={{ fontSize: "2.5rem", fontWeight: 800, color: "var(--brand-orange)" }}>
-                    ₹9 <span style={{ fontSize: "1rem", color: "var(--text-muted)" }}>/mo</span>
-                  </div>
-                  <button 
-                    disabled={payingPlan !== null}
-                    onClick={() => handlePayment("monthly")}
-                    className="btn-primary" 
-                    style={{ marginTop: "auto" }}
-                  >
-                    {payingPlan === "monthly" ? "Processing..." : "Subscribe Monthly"}
-                  </button>
-                </div>
-
-                {/* Yearly */}
-                <div style={{
-                  background: "var(--surface-1)", border: "2px solid var(--brand-orange)", borderRadius: "var(--radius-lg)",
-                  padding: "2rem", display: "flex", flexDirection: "column", gap: "1rem", position: "relative"
-                }}>
-                  <div style={{ position: "absolute", top: -12, right: 20, background: "var(--brand-orange)", color: "#fff", padding: "4px 12px", borderRadius: 20, fontSize: "0.75rem", fontWeight: 800 }}>BEST VALUE</div>
-                  <div>
-                    <div style={{ fontSize: "1.2rem", fontWeight: 800, color: "var(--text-primary)" }}>Yearly Plan</div>
-                    <div style={{ color: "var(--text-muted)" }}>365 days access</div>
-                  </div>
-                  <div style={{ fontSize: "2.5rem", fontWeight: 800, color: "var(--brand-orange)" }}>
-                    ₹19 <span style={{ fontSize: "1rem", color: "var(--text-muted)" }}>/yr</span>
-                  </div>
-                  <button 
-                    disabled={payingPlan !== null}
-                    onClick={() => handlePayment("yearly")}
-                    className="btn-primary" 
-                    style={{ marginTop: "auto", background: "var(--brand-primary)" }}
-                  >
-                    {payingPlan === "yearly" ? "Processing..." : "Subscribe Yearly"}
-                  </button>
-                </div>
-
-              </div>
-
-              {/* History Table */}
-              <h2 style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--text-primary)", marginBottom: "1.5rem" }}>Payment History</h2>
-              {history.length === 0 ? (
-                <div style={{ background: "var(--surface-1)", padding: "2rem", textAlign: "center", borderRadius: "var(--radius-lg)", border: "1px dashed var(--border)", color: "var(--text-muted)" }}>
-                  No past payments found.
-                </div>
-              ) : (
-                <div style={{ background: "var(--surface-1)", borderRadius: "var(--radius-lg)", border: "1px solid var(--border)", overflow: "hidden" }}>
-                  <table style={{ width: "100%", textAlign: "left", borderCollapse: "collapse" }}>
-                    <thead style={{ background: "var(--surface-2)", color: "var(--text-secondary)", fontSize: "0.85rem", textTransform: "uppercase" }}>
-                      <tr>
-                        <th style={{ padding: "1rem 1.5rem" }}>Date</th>
-                        <th style={{ padding: "1rem 1.5rem" }}>Plan</th>
-                        <th style={{ padding: "1rem 1.5rem" }}>Amount</th>
-                        <th style={{ padding: "1rem 1.5rem" }}>Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {history.map((h, i) => (
-                        <tr key={h._id} style={{ borderTop: "1px solid var(--border)" }}>
-                          <td style={{ padding: "1rem 1.5rem", color: "var(--text-primary)" }}>{new Date(h.createdAt).toLocaleDateString()}</td>
-                          <td style={{ padding: "1rem 1.5rem", color: "var(--text-primary)", textTransform: "capitalize" }}>{h.plan}</td>
-                          <td style={{ padding: "1rem 1.5rem", color: "var(--text-primary)", fontWeight: 700 }}>₹{h.amount}</td>
-                          <td style={{ padding: "1rem 1.5rem" }}>
-                            {h.status === "paid" && <span style={{ color: "#10b981", fontWeight: 700, fontSize: "0.85rem", background: "rgba(52,211,153,0.1)", padding: "4px 8px", borderRadius: 4 }}>PAID</span>}
-                            {h.status === "created" && <span style={{ color: "#f59e0b", fontWeight: 700, fontSize: "0.85rem", background: "rgba(245,158,11,0.1)", padding: "4px 8px", borderRadius: 4 }}>PENDING</span>}
-                            {h.status === "failed" && <span style={{ color: "#f87171", fontWeight: 700, fontSize: "0.85rem", background: "rgba(248,113,113,0.1)", padding: "4px 8px", borderRadius: 4 }}>FAILED</span>}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </>
-          )}
-
+          <h1 style={{ fontSize: "3rem", fontWeight: 950, color: "#fff", letterSpacing: "-0.04em", marginBottom: "0.75rem" }}>
+            TiffinPro <span style={{ color: "var(--brand)" }}>Premium</span>
+          </h1>
+          <p style={{ color: "var(--t2)", fontSize: "1.2rem", fontWeight: 500 }}>Unlock professional tools for your tiffin business.</p>
         </div>
+
+        {loading ? (
+          <div style={{ textAlign: "center", padding: "5rem" }}><span className="spinner" /></div>
+        ) : (
+          <>
+            {/* Status Card */}
+            <div className="card" style={{
+              background: isExpired ? "rgba(239,68,68,0.03)" : "rgba(34,197,94,0.03)",
+              borderColor: isExpired ? "rgba(239,68,68,0.15)" : "rgba(34,197,94,0.15)",
+              padding: "2rem 2.5rem",
+              marginBottom: "3.5rem",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center"
+            }}>
+              <div>
+                <div style={{ fontSize: "1.25rem", fontWeight: 900, color: isExpired ? "var(--red)" : "var(--green)", marginBottom: "0.4rem", display: "flex", alignItems: "center", gap: "0.6rem" }}>
+                  {isExpired ? "Subscription Expired" : isActiveTrial ? "7-Day Free Trial" : "Active Subscription"}
+                  {isActiveTrial && <span style={{ background: "rgba(34,197,94,0.1)", padding: "4px 10px", borderRadius: 20, fontSize: "0.7rem", fontWeight: 800, textTransform: "uppercase", border: "1px solid rgba(34,197,94,0.2)" }}>Trial</span>}
+                </div>
+                <p style={{ color: "var(--t3)", fontWeight: 600 }}>
+                  {expiry ? (
+                    <>Valid until <strong style={{ color: "#fff" }}>{expiry.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</strong></>
+                  ) : "No active subscription history."}
+                </p>
+              </div>
+              {!isExpired && (
+                <button onClick={() => router.push("/provider/dashboard")} className="btn-ghost" style={{ width: "auto", padding: "0.8rem 1.5rem" }}>
+                  Back to Dashboard <FiArrowRight />
+                </button>
+              )}
+            </div>
+
+            {/* Pricing Section */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "2rem", marginBottom: "5rem" }}>
+              
+              {/* Monthly */}
+              <div className="card hover-lift-up" style={{ padding: "3rem", background: "var(--s1)", display: "flex", flexDirection: "column", gap: "2rem" }}>
+                <div>
+                  <h3 style={{ fontSize: "1.4rem", fontWeight: 900, color: "#fff", marginBottom: "0.5rem" }}>Professional</h3>
+                  <p style={{ color: "var(--t3)", fontWeight: 600 }}>Perfect for small startups.</p>
+                </div>
+                <div style={{ display: "flex", alignItems: "baseline", gap: "0.4rem" }}>
+                  <span style={{ fontSize: "3.5rem", fontWeight: 950, color: "#fff", letterSpacing: "-0.05em" }}>₹9</span>
+                  <span style={{ fontSize: "1.1rem", color: "var(--t3)", fontWeight: 700 }}>/ month</span>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", color: "var(--t2)", fontWeight: 600 }}><FiCheck style={{ color: "var(--brand)" }} /> Unlimited Customers</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", color: "var(--t2)", fontWeight: 600 }}><FiCheck style={{ color: "var(--brand)" }} /> Daily Deliveries Log</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", color: "var(--t2)", fontWeight: 600 }}><FiCheck style={{ color: "var(--brand)" }} /> Digital Billing & Invoices</div>
+                </div>
+                <button 
+                  disabled={payingPlan !== null}
+                  onClick={() => handlePayment("monthly")}
+                  className="btn-ghost" 
+                  style={{ marginTop: "auto", height: "60px", fontSize: "1.05rem" }}
+                >
+                  {payingPlan === "monthly" ? "Processing..." : "Get Started"}
+                </button>
+              </div>
+
+              {/* Yearly */}
+              <div className="card hover-lift-up" style={{ 
+                padding: "3rem", 
+                background: "var(--s1)", 
+                borderColor: "var(--brand)", 
+                display: "flex", 
+                flexDirection: "column", 
+                gap: "2rem", 
+                position: "relative",
+                boxShadow: "0 24px 48px rgba(255,107,53,0.1)"
+              }}>
+                <div style={{ position: "absolute", top: -15, right: 30, background: "var(--brand)", color: "#fff", padding: "6px 16px", borderRadius: 20, fontSize: "0.75rem", fontWeight: 900, boxShadow: "0 4px 12px var(--brand-glow)" }}>BEST VALUE</div>
+                <div>
+                  <h3 style={{ fontSize: "1.4rem", fontWeight: 900, color: "#fff", marginBottom: "0.5rem" }}>Enterprise</h3>
+                  <p style={{ color: "var(--t3)", fontWeight: 600 }}>For growing food businesses.</p>
+                </div>
+                <div style={{ display: "flex", alignItems: "baseline", gap: "0.4rem" }}>
+                  <span style={{ fontSize: "3.5rem", fontWeight: 950, color: "var(--brand)", letterSpacing: "-0.05em" }}>₹19</span>
+                  <span style={{ fontSize: "1.1rem", color: "var(--t3)", fontWeight: 700 }}>/ year</span>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", color: "var(--t2)", fontWeight: 600 }}><FiCheck style={{ color: "var(--brand)" }} /> Everything in Monthly</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", color: "var(--t2)", fontWeight: 600 }}><FiCheck style={{ color: "var(--brand)" }} /> Priority Support</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", color: "var(--t2)", fontWeight: 600 }}><FiShield style={{ color: "var(--brand)" }} /> Early Access Features</div>
+                </div>
+                <button 
+                  disabled={payingPlan !== null}
+                  onClick={() => handlePayment("yearly")}
+                  className="btn-primary" 
+                  style={{ marginTop: "auto", height: "60px", fontSize: "1.05rem" }}
+                >
+                  {payingPlan === "yearly" ? "Processing..." : "Upgrade Now"}
+                </button>
+              </div>
+
+            </div>
+
+            {/* History Table */}
+            <h2 style={{ fontSize: "1.5rem", fontWeight: 900, color: "#fff", marginBottom: "2rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
+              <FiCalendar style={{ color: "var(--brand)" }} /> Billing History
+            </h2>
+            {history.length === 0 ? (
+              <div className="card" style={{ padding: "4rem", textAlign: "center", borderStyle: "dashed", color: "var(--t4)", fontWeight: 600 }}>
+                No past transactions found.
+              </div>
+            ) : (
+              <div className="card" style={{ padding: 0, overflow: "hidden", background: "var(--s1)" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.95rem" }}>
+                  <thead style={{ background: "var(--s2)", borderBottom: "1px solid var(--bd)" }}>
+                    <tr>
+                      <th style={{ padding: "1.25rem 2rem", textAlign: "left", color: "var(--t3)", fontWeight: 800 }}>Date</th>
+                      <th style={{ padding: "1.25rem 2rem", textAlign: "left", color: "var(--t3)", fontWeight: 800 }}>Plan</th>
+                      <th style={{ padding: "1.25rem 2rem", textAlign: "left", color: "var(--t3)", fontWeight: 800 }}>Amount</th>
+                      <th style={{ padding: "1.25rem 2rem", textAlign: "right", color: "var(--t3)", fontWeight: 800 }}>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {history.map((h) => (
+                      <tr key={h._id} style={{ borderBottom: "1px solid var(--bd)" }}>
+                        <td style={{ padding: "1.25rem 2rem", color: "#fff", fontWeight: 600 }}>{new Date(h.createdAt).toLocaleDateString()}</td>
+                        <td style={{ padding: "1.25rem 2rem", color: "#fff", fontWeight: 700, textTransform: "capitalize" }}>{h.plan}</td>
+                        <td style={{ padding: "1.25rem 2rem", color: "var(--brand)", fontWeight: 900 }}>₹{h.amount}</td>
+                        <td style={{ padding: "1.25rem 2rem", textAlign: "right" }}>
+                          {h.status === "paid" ? (
+                            <span style={{ color: "var(--green)", fontWeight: 800, fontSize: "0.8rem", background: "rgba(34,197,94,0.1)", padding: "4px 12px", borderRadius: 6, border: "1px solid rgba(34,197,94,0.15)" }}>PAID</span>
+                          ) : (
+                            <span style={{ color: "var(--red)", fontWeight: 800, fontSize: "0.8rem", background: "rgba(239,68,68,0.1)", padding: "4px 12px", borderRadius: 6, border: "1px solid rgba(239,68,68,0.15)" }}>{h.status.toUpperCase()}</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </>
+        )}
       </div>
-    </>
+    </div>
   );
 }

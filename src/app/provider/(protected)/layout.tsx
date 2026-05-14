@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/db";
 import User from "@/models/User";
 import Link from "next/link";
 import SidebarNav from "@/components/SidebarNav";
+import MobileNav from "@/components/MobileNav";
 import { FiLogOut, FiActivity, FiAlertTriangle } from "react-icons/fi";
 import { LuUtensils } from "react-icons/lu";
 
@@ -28,6 +29,8 @@ export default async function ProtectedProviderLayout({
 
   return (
     <div className="app-shell">
+      <MobileNav />
+      
       {/* Sidebar */}
       <aside className="sidebar">
         <div className="sidebar-brand">
@@ -60,7 +63,10 @@ export default async function ProtectedProviderLayout({
         </div>
 
         {isExpired && (
-          <div style={{ position: "fixed", inset: 0, left: "250px", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0, 0, 0, 0.7)", backdropFilter: "blur(6px)", padding: "2rem" }}>
+          <div style={{ 
+            position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", 
+            background: "rgba(0, 0, 0, 0.7)", backdropFilter: "blur(6px)", padding: "2rem"
+          }}>
             <div className="card animate-fade-up" style={{ textAlign: "center", maxWidth: 440, padding: "3.5rem", boxShadow: "0 32px 64px rgba(0,0,0,0.5)" }}>
                <div style={{ width: 80, height: 80, background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 2rem" }}>
                  <FiAlertTriangle style={{ fontSize: "2.5rem", color: "var(--red)" }} />
