@@ -27,7 +27,12 @@ export async function PATCH(request: NextRequest) {
   let signedUrl = "";
   if (parsed.data.menuImageUrl) {
     let key = parsed.data.menuImageUrl;
-    if (key.includes('/')) key = key.split('/').pop() || key;
+    if (key.startsWith('http')) {
+      try {
+        const url = new URL(key);
+        key = url.pathname.split('/').pop() || key;
+      } catch {}
+    }
     signedUrl = await getPresignedGetUrl(key);
   }
 

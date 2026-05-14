@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     });
 
     const extension = filename.split('.').pop()?.toLowerCase() || 'jpg';
-    const key = `menu_${session.user.id}_${Date.now()}.${extension}`;
+    const key = `menus/${(session.user as any).username}_menu.${extension}`;
 
     const command = new PutObjectCommand({
       Bucket: process.env.B2_BUCKET_NAME,

@@ -37,9 +37,13 @@ export async function GET(request: NextRequest, ctx: RouteContext) {
 
   let signedUrl = "";
   if (provider.menuImageUrl) {
-    // If it's an old full URL format, extract the key. Otherwise, just use the key.
     let key = provider.menuImageUrl;
-    if (key.includes('/')) key = key.split('/').pop() || key;
+    if (key.startsWith('http')) {
+      try {
+        const url = new URL(key);
+        key = url.pathname.split('/').pop() || key;
+      } catch {}
+    }
     signedUrl = await getPresignedGetUrl(key);
   }
 

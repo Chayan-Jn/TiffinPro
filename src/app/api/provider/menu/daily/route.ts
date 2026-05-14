@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { connectDB } from "@/lib/db";
 import DailyMenu from "@/models/DailyMenu";
+import User from "@/models/User";
+import { getPresignedGetUrl } from "@/lib/s3";
 import { z } from "zod";
 
 // GET /api/provider/menu/daily?date=YYYY-MM-DD
@@ -18,8 +20,24 @@ export async function GET(request: NextRequest) {
 
   await connectDB();
   const menu = await DailyMenu.findOne({ providerId: session.user.id, date }).lean();
+  const provider = await User.findById(session.user.id).select("menuImageUrl").lean();
 
-  return NextResponse.json({ menu: menu || { date, items: [] } });
+  let signedUrl = "";
+  if (provider?.menuImageUrl) {
+    let key = provider.menuImageUrl;
+    if (key.startsWith('http')) {
+      try {
+        const url = new URL(key);
+        key = url.pathname.split('/').pop() || key;
+      } catch {}
+    }
+    signedUrl = await getPresignedGetUrl(key);
+  }
+
+  return NextResponse.json({ 
+    menu: menu || { date, items: [] },
+    menuImageUrl: signedUrl
+  });
 }
 
 const MenuItemSchema = z.object({

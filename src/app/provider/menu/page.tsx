@@ -31,26 +31,7 @@ export default function ProviderMenuPage() {
   const [savingMenu, setSavingMenu] = useState(false);
   const [menuMsg, setMenuMsg] = useState("");
 
-  // Initial fetch: User profile (for image)
-  useEffect(() => {
-    fetch("/api/customer/menu/fake-id-to-test?date=2000-01-01") // Hack to just check if we can get user data, or better:
-      .catch(() => {});
-    // Actually, we can fetch the provider's profile to get the initial image.
-    // I'll quickly get it from a new fetch or just let it be empty until they upload.
-    // Wait, let's fetch it properly using the session.
-    fetch("/api/auth/session")
-      .then(res => res.json())
-      .then(async (session) => {
-         // Let's just create a quick fetch to get their current image via customer route
-         if (session?.user?.id) {
-           const res = await fetch(`/api/customer/menu/${session.user.id}?date=2000-01-01`);
-           if (res.ok) {
-             const data = await res.json();
-             if (data.menuImageUrl) setMenuImageUrl(data.menuImageUrl);
-           }
-         }
-      });
-  }, []);
+
 
   // Fetch daily menu when date changes
   useEffect(() => {
@@ -59,6 +40,7 @@ export default function ProviderMenuPage() {
     fetch(`/api/provider/menu/daily?date=${date}`)
       .then(r => r.json())
       .then(data => {
+        if (data.menuImageUrl) setMenuImageUrl(data.menuImageUrl);
         if (data.menu?.items?.length > 0) {
           setItems(data.menu.items);
         } else {
@@ -221,7 +203,11 @@ export default function ProviderMenuPage() {
               {imgError && <div className="error-alert" style={{ marginTop: "1rem" }}>{imgError}</div>}
             </div>
 
-            {menuImageUrl && (
+            {loadingMenu ? (
+              <div style={{ width: 200, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--surface-2)", borderRadius: "var(--radius-sm)", border: "1px dashed var(--border)" }}>
+                <p style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>Loading image...</p>
+              </div>
+            ) : menuImageUrl ? (
               <div style={{ flexShrink: 0, position: "relative", minWidth: 150, maxWidth: 300 }}>
                 <div style={{ fontWeight: 600, fontSize: "0.85rem", marginBottom: "0.5rem", color: "var(--text-secondary)" }}>Current Photo:</div>
                 <img src={menuImageUrl} alt="Mess Menu" style={{ width: "100%", maxHeight: 400, objectFit: "contain", borderRadius: "var(--radius-sm)", border: "1px solid var(--border)", background: "var(--surface-0)" }} />
@@ -235,6 +221,10 @@ export default function ProviderMenuPage() {
                   }}
                   title="Remove Image"
                 >✕</button>
+              </div>
+            ) : (
+              <div style={{ width: 200, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--surface-2)", borderRadius: "var(--radius-sm)", border: "1px dashed var(--border)", padding: "1rem" }}>
+                <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", textAlign: "center" }}>No image uploaded yet. Please upload one.</p>
               </div>
             )}
           </div>
