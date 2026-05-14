@@ -7,7 +7,7 @@ import TiffinLog from "@/models/TiffinLog";
 import { 
   LuUsers, LuTruck, LuClipboardList, 
   LuBookOpen, LuCreditCard, LuSettings, LuStar, 
-  LuPlus, LuUtensilsCrossed, LuCircleCheck, 
+  LuPlus, LuUtensils, LuCircleCheck, 
   LuCirclePause, LuLink2, LuLightbulb 
 } from "react-icons/lu";
 
@@ -22,7 +22,7 @@ async function getStats(providerId: string) {
   const mealCounts: Record<string, number> = { Breakfast: 0, Lunch: 0, Dinner: 0 };
   const activeIds = activeCustomers.map(c => String(c._id));
   activeCustomers.forEach(c => {
-    c.mealPlan?.meals?.forEach((m: string) => {
+    (c.mealPlan as any)?.meals?.forEach((m: string) => {
       if (mealCounts[m] !== undefined) mealCounts[m] += 1;
     });
   });
@@ -54,70 +54,71 @@ export default async function ProviderDashboard() {
   const today = new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", timeZone: "Asia/Kolkata" });
 
   const cards = [
-    { label: "Tiffins Today", value: stats.total, sub: `B:${stats.mealCounts.Breakfast} L:${stats.mealCounts.Lunch} D:${stats.mealCounts.Dinner}`, color: "var(--accent)", border: "rgba(255,69,0,0.2)", icon: <LuUtensilsCrossed /> },
-    { label: "Active",        value: stats.active,   sub: "Running tiffins",  color: "#22c55e", border: "rgba(34,197,94,0.2)", icon: <LuCircleCheck /> },
-    { label: "On Hold",       value: stats.onHold,   sub: "Paused tiffins",   color: "var(--amber)", border: "rgba(245,158,11,0.2)", icon: <LuCirclePause /> },
-    { label: "Connected",     value: stats.connected, sub: "App-linked",      color: "#60a5fa", border: "rgba(96,165,250,0.2)", icon: <LuLink2 /> },
+    { label: "Active Tiffins", value: stats.total, sub: `B:${stats.mealCounts.Breakfast} L:${stats.mealCounts.Lunch} D:${stats.mealCounts.Dinner}`, color: "var(--brand)", border: "rgba(255,107,53,0.15)", icon: <LuUtensils /> },
+    { label: "Customers",     value: stats.active,   sub: "Running service",  color: "var(--green)", border: "rgba(34,197,94,0.15)", icon: <LuCircleCheck /> },
+    { label: "Paused",        value: stats.onHold,   sub: "Tiffins on hold",  color: "var(--amber)", border: "rgba(245,158,11,0.15)", icon: <LuCirclePause /> },
+    { label: "Linked Users",  value: stats.connected, sub: "Synced app users",  color: "var(--brand)", border: "rgba(255,107,53,0.15)", icon: <LuLink2 /> },
   ];
 
   return (
-    <>
-      {/* Top bar */}
-      <div className="top-bar">
+    <div className="animate-fade-up">
+      {/* Header Area */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "3rem" }}>
         <div>
-          <p style={{ fontSize: "0.68rem", color: "var(--t3)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>{today}</p>
-          <h1 style={{ fontSize: "1.1rem", fontWeight: 900, color: "var(--t1)", letterSpacing: "-0.02em" }}>
-            Dashboard Overview
+          <p style={{ fontSize: "0.8rem", color: "var(--brand)", fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.4rem" }}>{today}</p>
+          <h1 style={{ fontSize: "2.5rem", fontWeight: 900, color: "#fff", letterSpacing: "-0.04em" }}>
+            Overview
           </h1>
         </div>
-        <Link href="/provider/customers" className="btn btn-accent" style={{ fontSize: "0.82rem", padding: "0.5rem 1rem", gap: "0.4rem" }}>
+        <Link href="/provider/customers" className="btn-primary" style={{ padding: "0.8rem 1.75rem" }}>
           <LuPlus /> Add Customer
         </Link>
       </div>
 
-      <div style={{ padding: "1.75rem" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "2.5rem" }}>
         {/* Summary Cards */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem", marginBottom: "2rem" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1.25rem" }}>
           {cards.map(c => (
-            <div key={c.label} className="stat-card" style={{ borderColor: c.border }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.75rem" }}>
-                <div style={{ fontSize: "1.2rem", color: c.color }}>{c.icon}</div>
+            <div key={c.label} className="card hover-lift-up" style={{ borderColor: c.border, background: "var(--s1)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem" }}>
+                <div style={{ width: 44, height: 44, background: "var(--s2)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", color: c.color, border: `1px solid ${c.border}` }}>
+                  {c.icon}
+                </div>
               </div>
-              <div style={{ fontSize: "2.2rem", fontWeight: 900, color: c.color, lineHeight: 1, letterSpacing: "-0.04em", marginBottom: "0.25rem" }}>
+              <div style={{ fontSize: "2.5rem", fontWeight: 950, color: "#fff", lineHeight: 1, letterSpacing: "-0.06em", marginBottom: "0.5rem" }}>
                 {c.value}
               </div>
-              <div style={{ fontSize: "0.8rem", fontWeight: 800, color: "var(--t1)", marginBottom: "0.1rem" }}>{c.label}</div>
-              <div style={{ fontSize: "0.72rem", color: "var(--t3)", fontWeight: 500 }}>{c.sub}</div>
+              <div style={{ fontSize: "0.9rem", fontWeight: 800, color: "var(--t2)", marginBottom: "0.15rem" }}>{c.label}</div>
+              <div style={{ fontSize: "0.75rem", color: "var(--t3)", fontWeight: 600 }}>{c.sub}</div>
             </div>
           ))}
         </div>
 
         {/* Quick Action Grid */}
-        <div style={{ background: "var(--s1)", border: "1px solid var(--bd2)", borderRadius: "var(--r3)", padding: "1.75rem" }}>
-          <p style={{ fontSize: "0.72rem", fontWeight: 800, color: "var(--t3)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "1.25rem" }}>
+        <div className="card" style={{ background: "var(--s1)", padding: "2.5rem" }}>
+          <p style={{ fontSize: "0.75rem", fontWeight: 900, color: "var(--t3)", textTransform: "uppercase", letterSpacing: "0.15em", marginBottom: "2rem" }}>
             Quick Management
           </p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "0.75rem" }}>
-            <Link href="/provider/customers"    className="qa-link accent" style={{ padding: "0.8rem" }}><LuUsers /> Manage Customers</Link>
-            <Link href="/provider/deliveries"   className="qa-link" style={{ padding: "0.8rem" }}><LuTruck /> Daily Deliveries</Link>
-            <Link href="/provider/history"      className="qa-link" style={{ padding: "0.8rem" }}><LuBookOpen /> Business Ledger</Link>
-            <Link href="/provider/menu"         className="qa-link" style={{ padding: "0.8rem" }}><LuClipboardList /> Meal Menu</Link>
-            <Link href="/provider/billing"      className="qa-link" style={{ padding: "0.8rem" }}><LuCreditCard /> Billing & Invoices</Link>
-            <Link href="/provider/settings"     className="qa-link" style={{ padding: "0.8rem" }}><LuSettings /> Account Settings</Link>
-            <Link href="/provider/subscription" className="qa-link gold" style={{ padding: "0.8rem" }}><LuStar /> Premium Features</Link>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "1rem" }}>
+            <Link href="/provider/customers"    className="btn-ghost" style={{ padding: "1.25rem", justifyContent: "flex-start", fontSize: "1rem" }}><LuUsers /> Manage Customers</Link>
+            <Link href="/provider/deliveries"   className="btn-ghost" style={{ padding: "1.25rem", justifyContent: "flex-start", fontSize: "1rem" }}><LuTruck /> Daily Deliveries</Link>
+            <Link href="/provider/menu"         className="btn-ghost" style={{ padding: "1.25rem", justifyContent: "flex-start", fontSize: "1rem" }}><LuClipboardList /> Meal Menu</Link>
+            <Link href="/provider/history"      className="btn-ghost" style={{ padding: "1.25rem", justifyContent: "flex-start", fontSize: "1rem" }}><LuBookOpen /> Business Ledger</Link>
+            <Link href="/provider/billing"      className="btn-ghost" style={{ padding: "1.25rem", justifyContent: "flex-start", fontSize: "1rem" }}><LuCreditCard /> Billing & Invoices</Link>
+            <Link href="/provider/subscription" className="btn-ghost" style={{ padding: "1.25rem", justifyContent: "flex-start", fontSize: "1rem", color: "var(--brand)" }}><LuStar /> Premium Subscription</Link>
           </div>
         </div>
 
         {stats.total === 0 && (
-          <div style={{ marginTop: "1.25rem", padding: "1rem 1.25rem", background: "rgba(255,69,0,0.03)", border: "1px solid rgba(255,69,0,0.12)", borderRadius: "var(--r2)", display: "flex", alignItems: "center", gap: "0.75rem" }}>
-            <LuLightbulb style={{ fontSize: "1.25rem", color: "var(--amber)" }} />
-            <p style={{ color: "var(--t2)", fontSize: "0.875rem", lineHeight: 1.5 }}>
+          <div style={{ padding: "1.5rem", background: "rgba(255,107,53,0.05)", border: "1px solid rgba(255,107,53,0.1)", borderRadius: "var(--r2)", display: "flex", alignItems: "center", gap: "1rem" }}>
+            <LuLightbulb style={{ fontSize: "1.5rem", color: "var(--amber)" }} />
+            <p style={{ color: "var(--t2)", fontSize: "0.95rem", fontWeight: 500 }}>
               No tiffins logged for today yet. 
-              <Link href="/provider/customers" style={{ color: "var(--accent)", fontWeight: 700, marginLeft: "0.4rem" }}>Mark deliveries →</Link>
+              <Link href="/provider/deliveries" style={{ color: "var(--brand)", fontWeight: 800, marginLeft: "0.5rem" }}>Update deliveries →</Link>
             </p>
           </div>
         )}
       </div>
-    </>
+    </div>
   );
 }

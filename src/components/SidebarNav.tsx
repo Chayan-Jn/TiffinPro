@@ -3,18 +3,18 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { 
-  FiGrid, FiUsers, FiTruck, FiClipboard, 
-  FiBook, FiCreditCard, FiSettings, FiStar 
-} from "react-icons/fi";
+  LuLayoutDashboard, LuUsers, LuTruck, LuClipboardList, 
+  LuBookOpen, LuCreditCard, LuSettings, LuStar 
+} from "react-icons/lu";
 
 const NAV = [
-  { href: "/provider/dashboard",    icon: <FiGrid />,        label: "Dashboard" },
-  { href: "/provider/customers",    icon: <FiUsers />,       label: "Customers" },
-  { href: "/provider/deliveries",   icon: <FiTruck />,       label: "Deliveries" },
-  { href: "/provider/menu",         icon: <FiClipboard />,   label: "Menu" },
-  { href: "/provider/history",      icon: <FiBook />,        label: "Ledger" },
-  { href: "/provider/billing",      icon: <FiCreditCard />,  label: "Billing" },
-  { href: "/provider/settings",     icon: <FiSettings />,    label: "Settings" },
+  { href: "/provider/dashboard",    icon: <LuLayoutDashboard />, label: "Dashboard" },
+  { href: "/provider/customers",    icon: <LuUsers />,           label: "Customers" },
+  { href: "/provider/deliveries",   icon: <LuTruck />,           label: "Deliveries" },
+  { href: "/provider/menu",         icon: <LuClipboardList />,    label: "Menu" },
+  { href: "/provider/history",      icon: <LuBookOpen />,        label: "Ledger" },
+  { href: "/provider/billing",      icon: <LuCreditCard />,      label: "Billing" },
+  { href: "/provider/settings",     icon: <LuSettings />,        label: "Settings" },
 ];
 
 export default function SidebarNav() {
@@ -42,7 +42,7 @@ export default function SidebarNav() {
         href="/provider/subscription" 
         className={`nav-item special ${pathname === "/provider/subscription" ? "active" : ""}`}
       >
-        <FiStar />
+        <LuStar />
         Subscription
       </Link>
     </div>

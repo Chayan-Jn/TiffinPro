@@ -5,6 +5,7 @@ import User from "@/models/User";
 import Link from "next/link";
 import SidebarNav from "@/components/SidebarNav";
 import { FiLogOut, FiActivity, FiAlertTriangle } from "react-icons/fi";
+import { LuUtensils } from "react-icons/lu";
 
 export default async function ProtectedProviderLayout({
   children,
@@ -30,11 +31,11 @@ export default async function ProtectedProviderLayout({
       {/* Sidebar */}
       <aside className="sidebar">
         <div className="sidebar-brand">
-          <div style={{ width: 32, height: 32, background: "var(--brand-primary)", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <FiActivity style={{ color: "#fff", fontSize: "1rem" }} />
+          <div style={{ width: 34, height: 34, background: "var(--brand)", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 12px var(--brand-glow)" }}>
+            <LuUtensils style={{ color: "#fff", fontSize: "1.1rem" }} />
           </div>
-          <span style={{ fontWeight: 800, fontSize: "1rem", color: "#fff", letterSpacing: "-0.02em" }}>TiffinPro</span>
-          <span style={{ marginLeft: "auto", fontSize: "0.6rem", fontWeight: 800, color: "var(--brand-primary)", background: "rgba(99, 102, 241, 0.1)", border: "1px solid rgba(99, 102, 241, 0.2)", borderRadius: 4, padding: "1px 6px", textTransform: "uppercase" }}>Pro</span>
+          <span style={{ fontWeight: 900, fontSize: "1.1rem", color: "#fff", letterSpacing: "-0.04em" }}>TiffinPro</span>
+          <span style={{ marginLeft: "auto", fontSize: "0.6rem", fontWeight: 800, color: "var(--brand)", background: "rgba(255, 107, 53, 0.1)", border: "1px solid rgba(255, 107, 53, 0.2)", borderRadius: 4, padding: "2px 6px", textTransform: "uppercase" }}>Pro</span>
         </div>
 
         <SidebarNav />
@@ -45,7 +46,7 @@ export default async function ProtectedProviderLayout({
             <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>@{user.username}</div>
           </div>
           <form action={async () => { "use server"; await signOut({ redirectTo: "/login" }); }}>
-            <button type="submit" className="nav-item" style={{ width: "100%", background: "var(--surface-2)", border: "1px solid var(--border)", cursor: "pointer" }}>
+            <button type="submit" className="nav-item" style={{ width: "100%", background: "var(--s2)", border: "1px solid var(--bd)", cursor: "pointer", color: "var(--t3)" }}>
               <FiLogOut /> Sign out
             </button>
           </form>
@@ -59,13 +60,13 @@ export default async function ProtectedProviderLayout({
         </div>
 
         {isExpired && (
-          <div style={{ position: "fixed", inset: 0, left: "260px", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(9, 9, 11, 0.7)", backdropFilter: "blur(4px)", padding: "2rem" }}>
-            <div className="card animate-scale-in" style={{ textAlign: "center", maxWidth: 440, padding: "3.5rem", boxShadow: "0 32px 64px rgba(0,0,0,0.4)" }}>
+          <div style={{ position: "fixed", inset: 0, left: "250px", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0, 0, 0, 0.7)", backdropFilter: "blur(6px)", padding: "2rem" }}>
+            <div className="card animate-fade-up" style={{ textAlign: "center", maxWidth: 440, padding: "3.5rem", boxShadow: "0 32px 64px rgba(0,0,0,0.5)" }}>
                <div style={{ width: 80, height: 80, background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 2rem" }}>
-                 <FiAlertTriangle style={{ fontSize: "2.5rem", color: "var(--brand-error)" }} />
+                 <FiAlertTriangle style={{ fontSize: "2.5rem", color: "var(--red)" }} />
                </div>
-               <h2 style={{ fontSize: "1.75rem", fontWeight: 800, color: "#fff", marginBottom: "1rem", letterSpacing: "-0.02em" }}>Subscription Expired</h2>
-               <p style={{ color: "var(--text-secondary)", marginBottom: "2.5rem", lineHeight: 1.6, fontSize: "1rem" }}>
+               <h2 style={{ fontSize: "1.75rem", fontWeight: 900, color: "#fff", marginBottom: "1rem", letterSpacing: "-0.04em" }}>Subscription Expired</h2>
+               <p style={{ color: "var(--t2)", marginBottom: "2.5rem", lineHeight: 1.6, fontSize: "1rem" }}>
                  Your access is temporarily limited. Please renew your subscription to resume managing your tiffins.
                </p>
                <Link href="/provider/subscription" className="btn-primary" style={{ textDecoration: "none" }}>
