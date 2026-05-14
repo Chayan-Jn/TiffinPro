@@ -1,80 +1,83 @@
-# Phase 2 Testing Checklist
+# Phase 3 Testing Checklist
 
-Run through these steps to ensure the Meal Management & Deliveries features are completely solid before we move on to Billing and Accounts (Phase 3).
+Run through these steps to ensure the Billing, Meal Quotas, and Payment tracking features are completely solid before we consider this ready for production.
 
+### 1. Provider Payment Settings (`/provider/settings`)
 
-### 1. Provider Menu Upload (`/provider/menu`)
+* **Setup UPI Details:**
+  Log in as a Provider. Navigate to Settings.
+  Enter a UPI ID (e.g. `9876543210@ybl`) and upload a Payment QR Code. 
+  Click "Save Payment Settings".
 
-* **Upload a New Image:** 
-  Click the upload box and select an image (JPG/PNG/WebP). Verify it uploads and displays the image instantly.
+* **Verify Persistence:**
+  Refresh the page to ensure the UPI ID and QR code load correctly from Backblaze B2.
 
-* **Verify Persistence:** 
-  Refresh the page. Verify the "Loading image..." text appears briefly, and then your uploaded image successfully loads.
+### 2. Meal Quota & Auto-Calculations (`/provider/customers`)
 
-* **Replace Image:** 
-  Without removing the current image, click the box and upload a *different* image. Verify the new image instantly replaces the old one.
-
-* **Remove Image:** 
-  Click the red **✕** button on the image. Verify the image disappears and the "No image uploaded yet" message appears.
-
-* **Check Backblaze (Optional):** 
-  Check your Backblaze B2 `menus` folder. You should see exactly one file named `yourusername_menu.extension` that overwrites itself, not a new file every time.
-
-
-### 2. Daily Text Menu (`/provider/menu`)
-
-* **Save Today's Menu:** 
-  Type some food items into Breakfast and Lunch. Leave Dinner empty. Click **Save Daily Menu**.
-
-* **Verify Persistence:** 
-  Refresh the page. Ensure Breakfast and Lunch are still there, and the empty Dinner row was cleanly ignored.
-
-* **Future Dates:** 
-  Change the date picker to tomorrow. Verify the inputs clear out so you can set tomorrow's menu.
-
-
-### 3. Customer Meal Plans (`/provider/customers`)
-
-* **Edit Customer Plan:** 
+* **Edit Customer Plan:**
   Go to Customers, click Edit on an existing customer.
+  Ensure Plan Type is `Monthly Fixed` and Rate is `3000`.
+  Set Start Date to today, and End Date exactly 1 month from now.
 
-* **Set Plan Details:** 
-  Set Plan Type to `Monthly Fixed`, Rate to `2500`, Start Date to Today, and Meals to `Breakfast, Lunch` (deliberately omit Dinner).
+* **Verify Quota:**
+  Save the customer. The system should automatically calculate `mealQuota`. (e.g., 30 days × 2 meals/day = 60 quota).
 
-* **Save:** 
-  Click Save Changes and verify the customer card updates.
+### 3. Tiffin Delivery Integration (`/provider/deliveries`)
 
+* **Mark Delivered:**
+  Go to Deliveries. Mark the customer's Lunch as **Delivered**. 
 
-### 4. Tracking Deliveries (`/provider/deliveries`)
+* **Verify Quota Depletion:**
+  Go back to the Customers dashboard or Billing dashboard and verify their `mealsConsumed` incremented by 1 (e.g. `Quota: 1 / 60`).
 
-* **Check Filtering:** 
-  Select **Date:** Today, **Meal:** `Lunch`. Your edited customer should appear in the "Pending" list.
+* **Undo Delivery:**
+  Go back to Deliveries and click **Undo** on that delivery.
+  Verify the customer's `mealsConsumed` correctly decrements back to 0.
 
-* **Check Exclusions:** 
-  Change **Meal** to `Dinner`. The customer should *not* appear (because they only subscribed to Breakfast and Lunch).
+### 4. Bill Generation (`/provider/billing`)
 
-* **Mark Delivered:** 
-  Go back to `Lunch` and click the green **✅ Mark X Delivered** button. Verify their status turns green.
+* **Force Overdue:**
+  To test billing, edit the customer again and set their End Date to yesterday so their Quota becomes 0, or artificially force `mealsConsumed` higher.
+  Go to the Billing dashboard. They should appear under **Overdue Customers**.
 
-* **Manual Override:** 
-  Click the individual **Cancel** button on a customer to verify you can manually override their status.
+* **Generate Bill:**
+  Click the **Generate Bills** button. 
+  Verify the customer moves from Overdue Customers to **Pending Invoices**.
 
+### 5. Customer Payment Flow (`/customer/home` & `/customer/billing`)
 
-### 5. Customer Dashboard (`/customer/home`)
-
-* **Login:** 
+* **Verify Notification:**
   Open an incognito window and log in as the Customer.
+  Check the home dashboard for the red 💳 **Unpaid Bill alert**.
 
-* **View Menu Drawer:** 
-  Click the **View Menu** button on the Provider's card.
+* **Upload Proof:**
+  Click the alert to go to the Billing page. 
+  Verify the Provider's UPI ID and QR code are visible.
+  Upload a dummy screenshot as "Payment Proof".
+  Verify the invoice state changes to "Verifying" or "Proof uploaded successfully".
 
-* **Verify Image & Menu:** 
-  Ensure the provider's uploaded photo loads correctly and fits within the screen. Ensure the specific text menu (e.g., your Breakfast and Lunch items) is visible.
+### 6. Provider Verification (`/provider/billing`)
 
-* **Verify Overdue Warning:** *(Optional)* 
-  Go back to the Provider window, edit the customer, and set their End Date to yesterday. Refresh the Customer window and verify the red **Overdue** warning box appears.
+* **Approve Payment:**
+  Switch back to the Provider window.
+  The invoice should now be in the **⚠️ Verification Queue**.
+  Click the image thumbnail to verify the proof opens.
+  Click **Verify & Approve**.
 
+* **Verify Renewal:**
+  The invoice should move to "Past Payments" / Paid.
+  Check the Customer's record: their `mealsConsumed` should be reset to `0`, and their Start/End Dates should be automatically shifted forward by 1 month for the new billing cycle!
+
+### 7. Auto-Relinking (`/customer/home`)
+
+* **Unsubscribe:**
+  As the Customer, click "Remove" on the provider card to unsubscribe.
+
+* **Re-Subscribe:**
+  Click "+ Find Provider" and search for them again.
+  Subscribe. 
+  Verify that instead of creating a duplicate record, the system instantly reconnects you to your exact previous manual record, restoring all your meal plans and history.
 
 ---
 
-Once you've tested these out, let me know and we will jump straight into Phase 3!
+Once you've tested these out, let me know!

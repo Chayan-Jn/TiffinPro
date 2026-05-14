@@ -5,7 +5,8 @@ export interface ITiffinLog extends Document {
   customerId: Types.ObjectId; // References ProviderCustomer
   date: string; // YYYY-MM-DD
   mealName: string; // e.g. "Breakfast", "Lunch", "Dinner"
-  status: "delivered" | "cancelled" | "paused"; // paused = customer paused, cancelled = provider couldn't deliver
+  quantity: number; // 0 = skipped, 1 = standard, 2+ = extra
+  status: "pending" | "delivered" | "cancelled" | "paused";
   createdAt: Date;
   updatedAt: Date;
 }
@@ -35,10 +36,15 @@ const TiffinLogSchema = new Schema<ITiffinLog>(
       required: true,
       trim: true,
     },
+    quantity: {
+      type: Number,
+      default: 1,
+      min: 0,
+    },
     status: {
       type: String,
-      enum: ["delivered", "cancelled", "paused"],
-      default: "delivered",
+      enum: ["pending", "delivered", "cancelled", "paused"],
+      default: "pending",
     },
   },
   { timestamps: true }
@@ -47,7 +53,10 @@ const TiffinLogSchema = new Schema<ITiffinLog>(
 // One log per customer per date per mealName
 TiffinLogSchema.index({ customerId: 1, date: 1, mealName: 1 }, { unique: true });
 
-const TiffinLog: Model<ITiffinLog> =
-  mongoose.models.TiffinLog ?? mongoose.model<ITiffinLog>("TiffinLog", TiffinLogSchema);
+// Clear cache to ensure schema updates apply in Next.js hot-reload
+if (mongoose.models.TiffinLog) {
+  delete mongoose.models.TiffinLog;
+}
+const TiffinLog: Model<ITiffinLog> = mongoose.model<ITiffinLog>("TiffinLog", TiffinLogSchema);
 
 export default TiffinLog;

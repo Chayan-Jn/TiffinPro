@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
   // Create a map of existing log statuses
   const logMap = new Map();
   logs.forEach((log) => {
-    logMap.set(String(log.customerId), { status: log.status, logId: log._id });
+    logMap.set(String(log.customerId), { status: log.status, logId: log._id, quantity: log.quantity });
   });
 
   // Combine customers with their log status (or "pending" if no log exists)
@@ -53,6 +53,7 @@ export async function GET(request: NextRequest) {
       displayName: c.displayName,
       phone: c.phone,
       status: existing?.status || "pending",
+      quantity: existing?.quantity !== undefined ? existing.quantity : 1,
       logId: existing?.logId || null,
     };
   });

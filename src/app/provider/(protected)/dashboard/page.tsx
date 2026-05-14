@@ -4,15 +4,39 @@ import Link from "next/link";
 import { connectDB } from "@/lib/db";
 import ProviderCustomer from "@/models/ProviderCustomer";
 
+import TiffinLog from "@/models/TiffinLog";
+
 async function getStats(providerId: string) {
   await connectDB();
-  const [tiffinsToday, onHold, manual, connected] = await Promise.all([
-    ProviderCustomer.countDocuments({ providerId, tiffinStatus: "active" }),
+  const [activeCustomers, onHold, manual, connected] = await Promise.all([
+    ProviderCustomer.find({ providerId, tiffinStatus: "active" }).lean(),
     ProviderCustomer.countDocuments({ providerId, tiffinStatus: "on_hold" }),
     ProviderCustomer.countDocuments({ providerId, status: "unlinked" }),
     ProviderCustomer.countDocuments({ providerId, status: "linked" }),
   ]);
-  return { tiffinsToday, onHold, manual, connected };
+
+  const activeIds = activeCustomers.map(c => String(c._id));
+  const mealCounts: Record<string, number> = { Breakfast: 0, Lunch: 0, Dinner: 0 };
+  
+  activeCustomers.forEach(c => {
+    c.mealPlan?.meals?.forEach(m => {
+      if (mealCounts[m] !== undefined) mealCounts[m] += 1;
+    });
+  });
+
+  const todayStr = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
+  const todayLogs = await TiffinLog.find({ providerId, date: todayStr }).lean();
+
+  todayLogs.forEach(log => {
+    if (activeIds.includes(String(log.customerId)) && mealCounts[log.mealName] !== undefined) {
+      const actualQty = log.status === "cancelled" ? 0 : (log.quantity ?? 1);
+      mealCounts[log.mealName] += (actualQty - 1);
+    }
+  });
+
+  const totalTiffins = mealCounts.Breakfast + mealCounts.Lunch + mealCounts.Dinner;
+
+  return { tiffinsToday: totalTiffins, mealCounts, onHold, manual, connected };
 }
 
 export default async function ProviderDashboard() {
@@ -27,6 +51,7 @@ export default async function ProviderDashboard() {
     {
       label: "Tiffins Today",
       value: stats.tiffinsToday,
+      subValue: `B: ${stats.mealCounts.Breakfast} | L: ${stats.mealCounts.Lunch} | D: ${stats.mealCounts.Dinner}`,
       icon: "🍱",
       color: "var(--brand-orange)",
       bg: "rgba(249,115,22,0.08)",
@@ -115,14 +140,27 @@ export default async function ProviderDashboard() {
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
           <Link
             href="/provider/customers"
-            style={{
-              color: "var(--text-secondary)",
-              fontSize: "0.875rem",
-              textDecoration: "none",
-              fontWeight: 500,
-            }}
+            style={{ color: "var(--text-secondary)", fontSize: "0.875rem", textDecoration: "none", fontWeight: 500 }}
           >
             Customers
+          </Link>
+          <Link
+            href="/provider/billing"
+            style={{ color: "var(--text-secondary)", fontSize: "0.875rem", textDecoration: "none", fontWeight: 500 }}
+          >
+            Billing
+          </Link>
+          <Link
+            href="/provider/history"
+            style={{ color: "var(--text-secondary)", fontSize: "0.875rem", textDecoration: "none", fontWeight: 500 }}
+          >
+            Ledger
+          </Link>
+          <Link
+            href="/provider/settings"
+            style={{ color: "var(--text-secondary)", fontSize: "0.875rem", textDecoration: "none", fontWeight: 500 }}
+          >
+            Settings
           </Link>
           <span style={{ color: "var(--text-secondary)", fontSize: "0.875rem" }}>
             @{user.username}
@@ -201,6 +239,11 @@ export default async function ProviderDashboard() {
               >
                 {stat.value}
               </div>
+              {stat.subValue && (
+                <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--brand-orange)", marginBottom: "0.5rem" }}>
+                  {stat.subValue}
+                </div>
+              )}
               <div
                 style={{
                   fontSize: "0.8rem",
@@ -272,22 +315,28 @@ export default async function ProviderDashboard() {
               🚚 Deliveries
             </Link>
             <Link
-              href="/provider/menu"
-              style={{
-                background: "var(--surface-2)",
-                border: "1px solid var(--border)",
-                color: "var(--text-primary)",
-                padding: "0.7rem 1.25rem",
-                borderRadius: "var(--radius-sm)",
-                fontWeight: 600,
-                fontSize: "0.875rem",
-                textDecoration: "none",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "0.4rem",
-              }}
+              href="/provider/history"
+              style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--text-primary)", padding: "0.7rem 1.25rem", borderRadius: "var(--radius-sm)", fontWeight: 600, fontSize: "0.875rem", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "0.4rem" }}
             >
-              📋 Menu Management
+              📖 Ledger
+            </Link>
+            <Link
+              href="/provider/menu"
+              style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--text-primary)", padding: "0.7rem 1.25rem", borderRadius: "var(--radius-sm)", fontWeight: 600, fontSize: "0.875rem", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "0.4rem" }}
+            >
+              📋 Menu
+            </Link>
+            <Link
+              href="/provider/billing"
+              style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--text-primary)", padding: "0.7rem 1.25rem", borderRadius: "var(--radius-sm)", fontWeight: 600, fontSize: "0.875rem", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "0.4rem" }}
+            >
+              💸 Billing
+            </Link>
+            <Link
+              href="/provider/settings"
+              style={{ background: "var(--surface-2)", border: "1px solid var(--border)", color: "var(--text-primary)", padding: "0.7rem 1.25rem", borderRadius: "var(--radius-sm)", fontWeight: 600, fontSize: "0.875rem", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "0.4rem" }}
+            >
+              ⚙️ Settings
             </Link>
           </div>
         </div>

@@ -28,7 +28,7 @@ const AddSchema = z.union([
   z.object({
     mode: z.literal("manual"),
     displayName: z.string().min(1).max(80).transform((v) => v.trim()),
-    phone: z.string().max(15).optional().default(""),
+    phone: z.string().regex(/^\d{10}$/, "Phone number must be exactly 10 digits").optional().or(z.literal("")),
   }),
   z.object({
     mode: z.literal("username"),
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({
-      record,
+      record: record.toJSON(),
       warning:
         possibleDuplicateOf
           ? "A connected customer has a similar name — possible duplicate."
@@ -128,5 +128,5 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  return NextResponse.json({ record }, { status: 201 });
+  return NextResponse.json({ record: record.toJSON() }, { status: 201 });
 }

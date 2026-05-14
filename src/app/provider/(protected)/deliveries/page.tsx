@@ -9,6 +9,7 @@ interface DeliveryCustomer {
   phone: string;
   status: "pending" | "delivered" | "cancelled" | "paused";
   logId: string | null;
+  quantity?: number;
 }
 
 export default function ProviderDeliveriesPage() {
@@ -83,6 +84,35 @@ export default function ProviderDeliveriesPage() {
 
   const pendingCount = deliveries.filter(d => d.status === "pending").length;
   const deliveredCount = deliveries.filter(d => d.status === "delivered").length;
+  
+  const totalTiffins = deliveries.reduce((sum, d) => sum + (d.status === "cancelled" ? 0 : (d.quantity ?? 1)), 0);
+
+  async function adjustQuantity(customerId: string, newQuantity: number) {
+    if (newQuantity < 0) return;
+    setUpdating(true);
+    setMsg("");
+    try {
+      const res = await fetch("/api/provider/deliveries/adjust", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ customerId, date, mealName: meal, quantity: newQuantity }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      
+      setDeliveries(prev => prev.map(d => {
+        if (d.customerId !== customerId) return d;
+        let newStatus = d.status;
+        if (newQuantity === 0 && d.status === "pending") newStatus = "cancelled";
+        if (newQuantity > 0 && d.status === "cancelled") newStatus = "pending";
+        return { ...d, quantity: newQuantity, status: newStatus };
+      }));
+    } catch (err: any) {
+      setMsg("❌ " + err.message);
+    } finally {
+      setUpdating(false);
+    }
+  }
 
   return (
     <div style={{ minHeight: "100dvh", background: "var(--surface-0)" }}>
@@ -125,8 +155,8 @@ export default function ProviderDeliveriesPage() {
 
           <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
             <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase" }}>Tiffins</div>
-              <div style={{ fontSize: "1.2rem", fontWeight: 800, color: "var(--brand-orange)" }}>{deliveries.length}</div>
+              <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase" }}>Tiffins to Cook</div>
+              <div style={{ fontSize: "1.2rem", fontWeight: 800, color: "var(--brand-orange)" }}>{totalTiffins}</div>
             </div>
             <div style={{ width: 1, height: 30, background: "var(--border)" }}></div>
             <button className="btn-primary" onClick={markAllDelivered} disabled={updating || pendingCount === 0} style={{ width: "auto", padding: "0.75rem 1.5rem" }}>
@@ -157,12 +187,32 @@ export default function ProviderDeliveriesPage() {
                 borderColor: d.status === "delivered" ? "rgba(52,211,153,0.3)" : "var(--border)"
               }}>
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: "1rem", color: "var(--text-primary)" }}>{d.displayName}</div>
+                  <div style={{ fontWeight: 700, fontSize: "1rem", color: "var(--text-primary)", display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                    {d.displayName}
+                    {d.quantity === 0 && <span style={{ background: "rgba(248,113,113,0.1)", color: "#f87171", padding: "2px 6px", borderRadius: 4, fontSize: "0.65rem", fontWeight: 800 }}>SKIPPED</span>}
+                    {(d.quantity ?? 1) > 1 && <span style={{ background: "rgba(249,115,22,0.1)", color: "var(--brand-orange)", padding: "2px 6px", borderRadius: 4, fontSize: "0.65rem", fontWeight: 800 }}>+{(d.quantity ?? 1) - 1} EXTRA</span>}
+                  </div>
                   {d.phone && <div style={{ color: "var(--text-secondary)", fontSize: "0.8rem", marginTop: "0.2rem" }}>📞 {d.phone}</div>}
                 </div>
                 
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                  {d.status === "pending" && (
+                <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                  
+                  {/* Quantity Adjuster */}
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", background: "var(--surface-0)", padding: "0.25rem", borderRadius: "var(--radius-md)", border: "1px solid var(--border)" }}>
+                    <button 
+                      disabled={updating || (d.quantity ?? 1) === 0}
+                      onClick={() => adjustQuantity(d.customerId, (d.quantity ?? 1) - 1)}
+                      style={{ width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--surface-1)", border: "none", borderRadius: 4, fontWeight: 800, color: "var(--text-secondary)", cursor: "pointer" }}
+                    >-</button>
+                    <span style={{ fontWeight: 800, width: "1.2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--text-primary)" }}>{d.quantity ?? 1}</span>
+                    <button 
+                      disabled={updating}
+                      onClick={() => adjustQuantity(d.customerId, (d.quantity ?? 1) + 1)}
+                      style={{ width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--surface-1)", border: "none", borderRadius: 4, fontWeight: 800, color: "var(--text-secondary)", cursor: "pointer" }}
+                    >+</button>
+                  </div>
+
+                  {d.status === "pending" && (d.quantity ?? 1) > 0 && (
                     <>
                       <button onClick={() => updateStatus([d.customerId], "delivered")} disabled={updating}
                         style={{ background: "rgba(52,211,153,0.1)", color: "#10b981", border: "1px solid rgba(52,211,153,0.3)", borderRadius: 6, padding: "0.4rem 0.8rem", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer" }}>
@@ -170,9 +220,13 @@ export default function ProviderDeliveriesPage() {
                       </button>
                       <button onClick={() => updateStatus([d.customerId], "cancelled")} disabled={updating}
                         style={{ background: "transparent", color: "#f87171", border: "1px solid rgba(248,113,113,0.3)", borderRadius: 6, padding: "0.4rem 0.8rem", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer" }}>
-                        ✕ Cancel Tiffin
+                        <span style={{ fontSize: "0.8rem" }}>Cancel</span>
                       </button>
                     </>
+                  )}
+
+                  {d.status === "cancelled" && (d.quantity ?? 1) === 0 && (
+                    <span style={{ color: "#f87171", fontSize: "0.8rem", fontWeight: 700, marginRight: "0.5rem" }}>CANCELLED</span>
                   )}
 
                   {d.status === "delivered" && (

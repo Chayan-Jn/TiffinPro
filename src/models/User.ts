@@ -6,6 +6,9 @@ export interface IUser extends Document {
   role: "provider" | "customer";
   displayName: string;
   menuImageUrl?: string; // For providers: URL to the static mess menu photo
+  paymentUpiId?: string; // Provider's UPI ID for billing
+  paymentQrUrl?: string; // Provider's QR Code URL (B2)
+  subscriptionExpiry?: Date; // For providers: When their SaaS subscription expires
   createdAt: Date;
   updatedAt: Date;
 }
@@ -41,11 +44,27 @@ const UserSchema = new Schema<IUser>(
       type: String,
       default: "",
     },
+    paymentUpiId: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    paymentQrUrl: {
+      type: String,
+      default: "",
+    },
+    subscriptionExpiry: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );
 
-const User: Model<IUser> =
-  mongoose.models.User ?? mongoose.model<IUser>("User", UserSchema);
+// Clear cache to ensure schema updates apply in Next.js hot-reload
+if (mongoose.models.User) {
+  delete mongoose.models.User;
+}
+const User: Model<IUser> = mongoose.model<IUser>("User", UserSchema);
 
 export default User;

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { signOut } from "next-auth/react";
+import Link from "next/link";
 
 interface MealPlan {
   planType: string;
@@ -15,7 +16,15 @@ interface ProviderRecord {
   _id: string;
   providerId: { _id: string; username: string; displayName: string };
   tiffinStatus: "active" | "on_hold";
-  mealPlan?: MealPlan;
+  mealPlan?: {
+    planType: string;
+    rate: number;
+    startDate: string;
+    endDate?: string;
+    meals: string[];
+    mealsConsumed?: number;
+    mealQuota?: number;
+  };
   createdAt: string;
 }
 
@@ -243,6 +252,7 @@ export default function CustomerHome() {
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
   const [removing, setRemoving] = useState(false);
   const [username, setUsername] = useState("");
+  const [pendingBills, setPendingBills] = useState(0);
 
   useEffect(() => {
     fetch("/api/auth/session").then(r => r.json()).then(s => {
@@ -252,6 +262,13 @@ export default function CustomerHome() {
       setProviders(d.records ?? []);
       setLoading(false);
     }).catch(() => setLoading(false));
+
+    // Check for pending bills
+    fetch("/api/customer/billing").then(r => r.json()).then(d => {
+      if (d.invoices) {
+        setPendingBills(d.invoices.filter((i: any) => i.status === "pending").length);
+      }
+    }).catch(() => {});
   }, []);
 
   async function removeProvider(id: string) {
@@ -288,6 +305,16 @@ export default function CustomerHome() {
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
           <span style={{ color: "var(--text-secondary)", fontSize: "0.875rem" }}>@{username}</span>
+          <Link href="/customer/billing" style={{ textDecoration: "none", position: "relative" }}>
+            <button style={{ background: "transparent", border: "none", fontSize: "1.2rem", cursor: "pointer", position: "relative" }}>
+              💳
+              {pendingBills > 0 && (
+                <span style={{ position: "absolute", top: -5, right: -5, background: "#f87171", color: "#fff", fontSize: "0.6rem", fontWeight: 800, width: 16, height: 16, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  {pendingBills}
+                </span>
+              )}
+            </button>
+          </Link>
           <button onClick={() => signOut({ callbackUrl: "/login" })}
             style={{
               background: "var(--surface-2)", border: "1px solid var(--border)",
@@ -298,6 +325,22 @@ export default function CustomerHome() {
       </nav>
 
       <main style={{ padding: "2.5rem 2rem", maxWidth: 800, margin: "0 auto" }}>
+        
+        {pendingBills > 0 && (
+          <Link href="/customer/billing" style={{ textDecoration: "none" }}>
+            <div style={{ background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.3)", borderRadius: "var(--radius-md)", padding: "1rem 1.5rem", marginBottom: "2rem", display: "flex", justifyContent: "space-between", alignItems: "center", animation: "fadeUp 0.3s" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", color: "#f87171" }}>
+                <span style={{ fontSize: "1.2rem" }}>⚠️</span>
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: "0.95rem" }}>You have {pendingBills} unpaid bill{pendingBills > 1 ? "s" : ""}!</div>
+                  <div style={{ fontSize: "0.8rem", opacity: 0.9 }}>Click here to view and pay your invoices.</div>
+                </div>
+              </div>
+              <span style={{ color: "#f87171", fontWeight: 700 }}>Pay Now →</span>
+            </div>
+          </Link>
+        )}
+
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "2rem", flexWrap: "wrap", gap: "1rem" }}>
           <div>
             <h1 style={{ fontSize: "1.8rem", fontWeight: 800, color: "var(--text-primary)", marginBottom: "0.25rem" }}>
@@ -386,6 +429,18 @@ export default function CustomerHome() {
                       <span>Meals:</span>
                       <span style={{ fontWeight: 600 }}>{p.mealPlan.meals.join(", ")}</span>
                     </div>
+                    
+                    {(p.mealPlan?.mealQuota ?? 0) > 0 && (
+                      <div style={{ marginTop: "1rem", paddingTop: "0.8rem", borderTop: "1px solid var(--border)" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.4rem", fontSize: "0.75rem", fontWeight: 700 }}>
+                          <span>Quota Progress</span>
+                          <span style={{ color: "var(--brand-orange)" }}>{p.mealPlan?.mealsConsumed ?? 0} / {p.mealPlan?.mealQuota} Meals</span>
+                        </div>
+                        <div style={{ height: 6, background: "var(--surface-1)", borderRadius: 3, overflow: "hidden", border: "1px solid rgba(0,0,0,0.05)" }}>
+                          <div style={{ height: "100%", width: `${((p.mealPlan?.mealsConsumed ?? 0) / (p.mealPlan?.mealQuota || 1)) * 100}%`, background: "var(--brand-orange)", transition: "width 0.3s ease" }} />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -397,6 +452,12 @@ export default function CustomerHome() {
                     📖 Full Menu
                   </button>
                 </div>
+                
+                {/* Daily Adjustments Component */}
+                {p.mealPlan && p.tiffinStatus === "active" && !isOverdue && (
+                  <AdjustMealsCard record={p} />
+                )}
+
               </div>
             )})}
           </div>
@@ -445,3 +506,92 @@ const actionBtnStyle: React.CSSProperties = {
   padding: "0.4rem 0.85rem", fontSize: "0.8rem", fontWeight: 600,
   color: "var(--text-secondary)", cursor: "pointer",
 };
+
+// ─── Adjust Meals Component ──────────────────────────────────────────────────
+function AdjustMealsCard({ record }: { record: ProviderRecord }) {
+  const [adjustments, setAdjustments] = useState<Record<string, number>>({});
+  const [updatingAdj, setUpdatingAdj] = useState<string | null>(null);
+
+  useEffect(() => {
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    
+    fetch(`/api/customer/adjustments?date=${todayStr}`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.logs) {
+          const adj: Record<string, number> = {};
+          d.logs.forEach((log: any) => {
+            if (log.providerId === record.providerId._id) {
+              adj[log.mealName] = log.quantity;
+            }
+          });
+          setAdjustments(adj);
+        }
+      });
+  }, [record.providerId._id]);
+
+  async function handleAdjust(mealName: string, newQuantity: number) {
+    if (newQuantity < 0) return;
+    setUpdatingAdj(mealName);
+    
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    
+    try {
+      const res = await fetch("/api/customer/adjustments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          providerId: record.providerId._id,
+          date: todayStr,
+          mealName,
+          quantity: newQuantity
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      
+      setAdjustments(prev => ({ ...prev, [mealName]: newQuantity }));
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setUpdatingAdj(null);
+    }
+  }
+
+  return (
+    <div style={{ background: "var(--surface-0)", borderRadius: "var(--radius-md)", padding: "1rem", border: "1px dashed var(--border)" }}>
+      <h4 style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: "0.75rem" }}>Adjust Today's Tiffins</h4>
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+        {record.mealPlan!.meals.map(mealName => {
+          const qty = adjustments[mealName] !== undefined ? adjustments[mealName] : 1;
+          
+          return (
+            <div key={mealName} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ fontSize: "0.85rem", fontWeight: 600, color: qty === 0 ? "#f87171" : "var(--text-secondary)", display: "flex", gap: "0.4rem", alignItems: "center" }}>
+                {mealName}
+                {qty === 0 && <span style={{ background: "rgba(248,113,113,0.1)", padding: "2px 4px", borderRadius: 4, fontSize: "0.6rem" }}>SKIPPED</span>}
+                {qty > 1 && <span style={{ background: "rgba(249,115,22,0.1)", color: "var(--brand-orange)", padding: "2px 4px", borderRadius: 4, fontSize: "0.6rem" }}>+{qty - 1} EXTRA</span>}
+              </div>
+              
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", background: "var(--surface-1)", padding: "0.2rem", borderRadius: "var(--radius-sm)", border: "1px solid var(--border)" }}>
+                <button 
+                  disabled={qty === 0 || updatingAdj === mealName}
+                  onClick={() => handleAdjust(mealName, qty - 1)}
+                  style={{ width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--surface-2)", border: "none", borderRadius: 4, fontWeight: 800, color: "var(--text-secondary)", cursor: "pointer", opacity: qty === 0 ? 0.5 : 1 }}
+                >-</button>
+                <span style={{ fontWeight: 800, width: "1.2rem", textAlign: "center", color: "var(--text-primary)", fontSize: "0.85rem" }}>{updatingAdj === mealName ? "…" : qty}</span>
+                <button 
+                  disabled={updatingAdj === mealName}
+                  onClick={() => handleAdjust(mealName, qty + 1)}
+                  style={{ width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--surface-2)", border: "none", borderRadius: 4, fontWeight: 800, color: "var(--text-secondary)", cursor: "pointer" }}
+                >+</button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}

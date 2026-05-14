@@ -49,7 +49,12 @@ export async function POST(request: NextRequest) {
 
     const passwordHash = await bcrypt.hash(password, 12);
 
-    await User.create({ username, passwordHash, displayName, role });
+    let subscriptionExpiry = null;
+    if (role === "provider") {
+      subscriptionExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+    }
+
+    await User.create({ username, passwordHash, displayName, role, subscriptionExpiry });
 
     return NextResponse.json({ ok: true }, { status: 201 });
   } catch (err) {

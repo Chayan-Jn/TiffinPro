@@ -30,7 +30,12 @@ export async function PATCH(request: NextRequest) {
     if (key.startsWith('http')) {
       try {
         const url = new URL(key);
-        key = url.pathname.split('/').pop() || key;
+        const bucketPrefix = `/${process.env.B2_BUCKET_NAME}/`;
+        if (url.pathname.includes(bucketPrefix)) {
+          key = url.pathname.split(bucketPrefix)[1];
+        } else {
+          key = url.pathname.substring(1);
+        }
       } catch {}
     }
     signedUrl = await getPresignedGetUrl(key);

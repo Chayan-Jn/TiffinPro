@@ -17,6 +17,8 @@ export interface IProviderCustomer extends Document {
     startDate: Date;
     endDate?: Date;
     meals: string[]; // e.g. ["Breakfast", "Lunch", "Dinner", "Snacks"]
+    mealQuota: number;     // Total meals in the billing cycle
+    mealsConsumed: number; // Meals delivered so far
   };
   createdAt: Date;
   updatedAt: Date;
@@ -87,6 +89,8 @@ const ProviderCustomerSchema = new Schema<IProviderCustomer>(
         type: [String],
         default: ["Breakfast", "Lunch", "Dinner"],
       },
+      mealQuota: { type: Number, default: 0 },
+      mealsConsumed: { type: Number, default: 0 },
     },
   },
   { timestamps: true }
@@ -95,7 +99,7 @@ const ProviderCustomerSchema = new Schema<IProviderCustomer>(
 // A customer (userId) can only be linked once per provider
 ProviderCustomerSchema.index(
   { providerId: 1, userId: 1 },
-  { unique: true, sparse: true }
+  { unique: true, partialFilterExpression: { userId: { $type: "objectId" } } }
 );
 
 const ProviderCustomer: Model<IProviderCustomer> =

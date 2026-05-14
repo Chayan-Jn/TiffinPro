@@ -19,6 +19,8 @@ interface CustomerRecord {
     startDate: string;
     endDate?: string;
     meals: string[];
+    mealsConsumed?: number;
+    mealQuota?: number;
   };
   createdAt: string;
 }
@@ -67,6 +69,8 @@ function EditModal({ record, onClose, onSaved }: {
     return "";
   });
   const [mealsStr, setMealsStr] = useState(record.mealPlan?.meals?.join(", ") || "Breakfast, Lunch, Dinner");
+  const [mealQuota, setMealQuota] = useState(record.mealPlan?.mealQuota?.toString() || "");
+  const [mealsConsumed, setMealsConsumed] = useState(record.mealPlan?.mealsConsumed?.toString() || "0");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -102,7 +106,9 @@ function EditModal({ record, onClose, onSaved }: {
           rate: Number(rate),
           startDate: new Date(startDate).toISOString(),
           endDate: endDate ? new Date(endDate).toISOString() : undefined,
-          meals: mealsStr.split(",").map(m => m.trim()).filter(m => m.length > 0)
+          meals: mealsStr.split(",").map(m => m.trim()).filter(m => m.length > 0),
+          mealQuota: mealQuota ? Number(mealQuota) : undefined,
+          mealsConsumed: mealsConsumed ? Number(mealsConsumed) : 0,
         }
       }),
     });
@@ -128,7 +134,7 @@ function EditModal({ record, onClose, onSaved }: {
           </div>
           <div>
             <label className="field-label">Phone</label>
-            <input className="field-input" placeholder="Optional" value={phone} onChange={e => setPhone(e.target.value)} />
+            <input className="field-input" placeholder="10-digit number" value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))} maxLength={10} pattern="\d{10}" />
           </div>
           <div>
             <label className="field-label">Tiffin Status</label>
@@ -218,6 +224,20 @@ function EditModal({ record, onClose, onSaved }: {
                     }
                   }}
                 >Add</button>
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginTop: "1rem", paddingTop: "1rem", borderTop: "1px solid rgba(249,115,22,0.2)" }}>
+              <div>
+                <label className="field-label" style={{ fontSize: "0.75rem", display: "flex", justifyContent: "space-between" }}>
+                  <span>Total Quota (Meals)</span>
+                  <span style={{ color: "var(--text-muted)", fontWeight: 400 }}>(Optional)</span>
+                </label>
+                <input type="number" className="field-input" value={mealQuota} onChange={e => setMealQuota(e.target.value)} placeholder="Auto-calculated" />
+              </div>
+              <div>
+                <label className="field-label" style={{ fontSize: "0.75rem" }}>Meals Consumed</label>
+                <input type="number" className="field-input" value={mealsConsumed} onChange={e => setMealsConsumed(e.target.value)} />
               </div>
             </div>
           </div>
@@ -409,8 +429,8 @@ function AddModal({ onClose, onAdded }: {
             </div>
             <div>
               <label className="field-label">Phone (optional)</label>
-              <input id="manual-phone" className="field-input" placeholder="9876543210" value={manualPhone}
-                onChange={e => setManualPhone(e.target.value)} maxLength={15} />
+              <input id="manual-phone" className="field-input" placeholder="10-digit number" value={manualPhone}
+                onChange={e => setManualPhone(e.target.value.replace(/\D/g, '').slice(0, 10))} maxLength={10} pattern="\d{10}" />
             </div>
             <button id="manual-add-submit" type="submit" className="btn-primary" disabled={manualLoading}>
               {manualLoading ? "Adding…" : "Add Customer"}
@@ -480,6 +500,13 @@ function CustomerCard({ record, onEdit, onDelete, onLink }: {
             {record.tiffinStatus === "active"
               ? <Badge label="Active" color="var(--brand-orange)" bg="rgba(249,115,22,0.1)" />
               : <Badge label="On Hold" color="#9ca3af" bg="rgba(156,163,175,0.1)" />}
+            {(record.mealPlan?.mealQuota ?? 0) > 0 && (
+              <Badge 
+                label={`Quota: ${record.mealPlan?.mealsConsumed ?? 0} / ${record.mealPlan?.mealQuota}`} 
+                color="#60a5fa" 
+                bg="rgba(96,165,250,0.1)" 
+              />
+            )}
           </div>
           {record.notes && (
             <p style={{ color: "var(--text-muted)", fontSize: "0.8rem", marginTop: "0.5rem", fontStyle: "italic" }}>

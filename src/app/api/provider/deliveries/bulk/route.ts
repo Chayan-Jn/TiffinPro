@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { connectDB } from "@/lib/db";
 import TiffinLog from "@/models/TiffinLog";
+import ProviderCustomer from "@/models/ProviderCustomer";
 import { z } from "zod";
 
 const BulkSchema = z.object({
@@ -28,32 +29,67 @@ export async function POST(request: NextRequest) {
 
   const { date, mealName, customerIds, status } = parsed.data;
 
+  // 1. Fetch existing logs to calculate deltas
+  const existingLogs = await TiffinLog.find({
+    providerId: session.user.id,
+    customerId: { $in: customerIds },
+    date,
+    mealName,
+  }).lean();
+
+  const oldLogMap = new Map();
+  for (const log of existingLogs) {
+    oldLogMap.set(String(log.customerId), log);
+  }
+
+  const customerDeltas = new Map<string, number>();
+
+  for (const customerId of customerIds) {
+    const oldLog = oldLogMap.get(customerId);
+    const oldStatus = oldLog?.status || "pending";
+    const quantity = oldLog?.quantity !== undefined ? oldLog.quantity : 1;
+    let delta = 0;
+
+    if (status === "delivered" && oldStatus !== "delivered") {
+      delta = quantity;
+    } else if (status !== "delivered" && oldStatus === "delivered") {
+      delta = -quantity;
+    }
+
+    if (delta !== 0) {
+      customerDeltas.set(customerId, delta);
+    }
+  }
+
+  // 2. Update TiffinLogs
   if (status === "pending") {
-    // "Undo" logic: If setting back to pending, we delete the override logs completely.
     await TiffinLog.deleteMany({
       providerId: session.user.id,
       customerId: { $in: customerIds },
       date,
       mealName,
     });
-    return NextResponse.json({ success: true, message: `Reverted ${customerIds.length} tiffins to pending` });
+  } else {
+    const operations = customerIds.map((customerId) => ({
+      updateOne: {
+        filter: { providerId: session.user.id, customerId, date, mealName },
+        update: { $set: { status } },
+        upsert: true,
+      },
+    }));
+    await TiffinLog.bulkWrite(operations);
   }
 
-  // Use MongoDB bulkWrite for fast upserts
-  const operations = customerIds.map((customerId) => ({
-    updateOne: {
-      filter: {
-        providerId: session.user.id,
-        customerId,
-        date,
-        mealName,
+  // 3. Update ProviderCustomer mealsConsumed using bulkWrite
+  if (customerDeltas.size > 0) {
+    const pcOperations = Array.from(customerDeltas.entries()).map(([cId, delta]) => ({
+      updateOne: {
+        filter: { _id: cId, providerId: session.user.id },
+        update: { $inc: { "mealPlan.mealsConsumed": delta } },
       },
-      update: { $set: { status } },
-      upsert: true,
-    },
-  }));
-
-  await TiffinLog.bulkWrite(operations);
+    }));
+    await ProviderCustomer.bulkWrite(pcOperations);
+  }
 
   return NextResponse.json({ success: true, message: `Marked ${customerIds.length} tiffins as ${status}` });
 }
