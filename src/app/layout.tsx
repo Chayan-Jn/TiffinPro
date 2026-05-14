@@ -1,16 +1,6 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Toaster } from "react-hot-toast";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "TiffinPro — Tiffin Management Made Simple",
@@ -24,11 +14,31 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html lang="en">
+      <body>
+        {children}
+        <Toaster
+          position="top-center"
+          toastOptions={{
+            duration: 4000,
+            style: {
+              background: "var(--s2)",
+              color: "var(--t1)",
+              border: "1px solid var(--bd2)",
+              borderRadius: "var(--r1)",
+              fontFamily: "'Inter', system-ui, sans-serif",
+              fontWeight: 600,
+              fontSize: "0.85rem",
+            },
+            success: {
+              iconTheme: { primary: "var(--green)", secondary: "#fff" },
+            },
+            error: {
+              iconTheme: { primary: "var(--red)", secondary: "#fff" },
+            },
+          }}
+        />
+      </body>
     </html>
   );
 }

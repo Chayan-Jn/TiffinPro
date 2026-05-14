@@ -1,7 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { 
+  FiUtensils, FiCalendar, FiImage, FiPlus, 
+  FiTrash2, FiUpload, FiX, FiSave, FiCheckCircle, 
+  FiClipboard, FiTarget 
+} from "react-icons/fi";
 import { useRouter } from "next/navigation";
+import { toast } from "react-hot-toast";
 
 interface MenuItem {
   mealName: string;
@@ -9,17 +15,11 @@ interface MenuItem {
 }
 
 export default function ProviderMenuPage() {
-  const router = useRouter();
-
-  // Image Upload State
   const [menuImageUrl, setMenuImageUrl] = useState<string>("");
   const [uploading, setUploading] = useState(false);
-  const [imgError, setImgError] = useState("");
 
-  // Daily Menu State
   const [date, setDate] = useState(() => {
     const today = new Date();
-    // Format YYYY-MM-DD local time
     return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
   });
   const [items, setItems] = useState<MenuItem[]>([
@@ -29,14 +29,9 @@ export default function ProviderMenuPage() {
   ]);
   const [loadingMenu, setLoadingMenu] = useState(true);
   const [savingMenu, setSavingMenu] = useState(false);
-  const [menuMsg, setMenuMsg] = useState("");
 
-
-
-  // Fetch daily menu when date changes
   useEffect(() => {
     setLoadingMenu(true);
-    setMenuMsg("");
     fetch(`/api/provider/menu/daily?date=${date}`)
       .then(r => r.json())
       .then(data => {
@@ -44,247 +39,161 @@ export default function ProviderMenuPage() {
         if (data.menu?.items?.length > 0) {
           setItems(data.menu.items);
         } else {
-          // Reset to default empty blocks if none exist
           setItems([
             { mealName: "Breakfast", description: "" },
             { mealName: "Lunch", description: "" },
             { mealName: "Dinner", description: "" }
           ]);
         }
-        setLoadingMenu(false);
       })
-      .catch(() => setLoadingMenu(false));
+      .catch(() => toast.error("Failed to load menu."))
+      .finally(() => setLoadingMenu(false));
   }, [date]);
 
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    
-    // Check size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      setImgError("File too large. Maximum size is 5MB.");
-      return;
-    }
-
+    if (file.size > 5 * 1024 * 1024) { toast.error("File too large (Max 5MB)"); return; }
     setUploading(true);
-    setImgError("");
-
     try {
-      // 1. Get presigned URL
       const presignRes = await fetch("/api/provider/menu/presigned-url", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ filename: file.name, contentType: file.type }),
       });
       const presignData = await presignRes.json();
       if (!presignRes.ok) throw new Error(presignData.error);
-
-      // 2. Upload directly to B2
-      const uploadRes = await fetch(presignData.uploadUrl, {
-        method: "PUT",
-        headers: { "Content-Type": file.type },
-        body: file,
-      });
-      if (!uploadRes.ok) throw new Error("Failed to upload image to storage server.");
-
-      // 3. Save key to profile
+      const uploadRes = await fetch(presignData.uploadUrl, { method: "PUT", headers: { "Content-Type": file.type }, body: file });
+      if (!uploadRes.ok) throw new Error("Failed to upload image.");
       const saveRes = await fetch("/api/provider/menu/image", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        method: "PATCH", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ menuImageUrl: presignData.key }),
       });
-      
       const saveResData = await saveRes.json();
-      if (!saveRes.ok) throw new Error("Failed to save image URL to profile.");
-
       setMenuImageUrl(saveResData.menuImageUrl);
+      toast.success("Menu image updated!");
     } catch (err: any) {
-      setImgError(err.message || "An error occurred during upload.");
+      toast.error(err.message || "An error occurred.");
     } finally {
       setUploading(false);
-      // Clear input so they can re-select the same file if needed
       e.target.value = "";
-    }
-  }
-
-  async function removeImage() {
-    setUploading(true);
-    try {
-      await fetch("/api/provider/menu/image", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ menuImageUrl: "" }),
-      });
-      setMenuImageUrl("");
-    } catch (err) {
-      setImgError("Failed to remove image.");
-    } finally {
-      setUploading(false);
     }
   }
 
   async function saveDailyMenu() {
     setSavingMenu(true);
-    setMenuMsg("");
-
-    const res = await fetch("/api/provider/menu/daily", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ date, items }),
-    });
-
-    const data = await res.json();
-    setSavingMenu(false);
-
-    if (res.ok) {
-      setMenuMsg("✅ Menu saved successfully!");
-      // clear message after 3s
-      setTimeout(() => setMenuMsg(""), 3000);
-    } else {
-      setMenuMsg("❌ " + (data.error || "Failed to save"));
+    try {
+      const res = await fetch("/api/provider/menu/daily", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ date, items }),
+      });
+      if (res.ok) {
+        toast.success("Daily menu saved!");
+      } else {
+        toast.error("Failed to save.");
+      }
+    } finally {
+      setSavingMenu(false);
     }
   }
 
-  function addMealField() {
-    setItems([...items, { mealName: "", description: "" }]);
-  }
-
-  function updateItem(index: number, field: "mealName" | "description", value: string) {
-    const newItems = [...items];
-    newItems[index][field] = value;
-    setItems(newItems);
-  }
-
-  function removeItem(index: number) {
-    setItems(items.filter((_, i) => i !== index));
-  }
-
   return (
-    <div style={{ minHeight: "100dvh", background: "var(--surface-0)" }}>
-      {/* Nav */}
-      <nav style={{
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "1rem 2rem", borderBottom: "1px solid var(--border)",
-        background: "var(--surface-1)", position: "sticky", top: 0, zIndex: 10,
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-          <button onClick={() => router.push("/provider/dashboard")}
-            style={{ background: "none", border: "none", color: "var(--text-secondary)", cursor: "pointer", fontSize: "0.9rem" }}>
-            ← Dashboard
-          </button>
-          <span style={{ color: "var(--border)" }}>|</span>
-          <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>Menu Management</span>
+    <div style={{ minHeight: "100%" }} className="animate-fade-in">
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "3rem" }}>
+        <div>
+          <h1 style={{ fontSize: "2.5rem", fontWeight: 900, color: "#fff", marginBottom: "0.5rem", letterSpacing: "-0.04em" }}>Menu</h1>
+          <p style={{ color: "var(--text-secondary)", fontSize: "1.1rem" }}>Define what&apos;s cooking today.</p>
         </div>
-      </nav>
+        <button className="btn-primary" style={{ width: "auto", padding: "0.75rem 1.5rem" }} onClick={saveDailyMenu} disabled={savingMenu}>
+          {savingMenu ? <span className="spinner" /> : <><FiSave /> Save Daily Menu</>}
+        </button>
+      </div>
 
-      <main style={{ padding: "2rem", maxWidth: 900, margin: "0 auto", display: "flex", flexDirection: "column", gap: "2rem" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "2.5rem" }}>
         
-        {/* Section 1: Static Mess Menu Photo */}
-        <section style={{ background: "var(--surface-1)", border: "1px solid var(--border)", borderRadius: "var(--radius-lg)", padding: "2rem" }}>
-          <h2 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "0.5rem" }}>Mess Menu Photo</h2>
-          <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", marginBottom: "1.5rem" }}>
-            Upload a photo of your weekly or monthly mess menu. Customers will see this when they view your profile.
-          </p>
-
-          <div style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap" }}>
-            <div style={{ flex: 1, minWidth: 300 }}>
-              <label style={{
-                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                border: "2px dashed var(--border)", borderRadius: "var(--radius-md)", padding: "2rem",
-                cursor: "pointer", background: "var(--surface-2)", transition: "all 0.2s"
-              }}>
-                <span style={{ fontSize: "2rem", marginBottom: "1rem" }}>📸</span>
-                <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>
-                  {uploading ? "Uploading..." : "Click to upload new image"}
-                </span>
-                <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "0.5rem" }}>JPG, PNG, WebP (Max 5MB)</span>
-                <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} style={{ display: "none" }} />
-              </label>
-              {imgError && <div className="error-alert" style={{ marginTop: "1rem" }}>{imgError}</div>}
+        {/* Standard Menu Image */}
+        <section className="card">
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "2rem" }}>
+            <div style={{ width: 48, height: 48, background: "rgba(99, 102, 241, 0.1)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--brand-primary)" }}>
+              <FiImage style={{ fontSize: "1.5rem" }} />
             </div>
+            <div>
+              <h2 style={{ fontSize: "1.25rem", fontWeight: 800, color: "#fff" }}>Master Menu Photo</h2>
+              <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem" }}>Upload a picture of your weekly/standard menu.</p>
+            </div>
+          </div>
+          
+          <div style={{ display: "flex", gap: "2rem", flexWrap: "wrap" }}>
+            <label style={{ 
+              flex: 1, minWidth: "300px", border: "2px dashed var(--border)", borderRadius: "var(--radius-lg)", 
+              padding: "3rem 2rem", display: "flex", flexDirection: "column", alignItems: "center", 
+              cursor: "pointer", background: "var(--surface-2)", transition: "all 0.3s",
+              borderColor: uploading ? "var(--brand-primary)" : "var(--border)"
+            }} onMouseEnter={e => e.currentTarget.style.borderColor = "var(--brand-primary)"} onMouseLeave={e => !uploading && (e.currentTarget.style.borderColor = "var(--border)")}>
+              <FiUpload style={{ fontSize: "2.5rem", color: "var(--text-muted)", marginBottom: "1rem" }} />
+              <span style={{ fontWeight: 800, fontSize: "1.1rem", color: "#fff" }}>{uploading ? "Uploading..." : "Click to Upload Image"}</span>
+              <span style={{ fontSize: "0.8rem", color: "var(--text-muted)", marginTop: "0.5rem" }}>JPG or PNG (Max 5MB)</span>
+              <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} style={{ display: "none" }} />
+            </label>
 
-            {loadingMenu ? (
-              <div style={{ width: 200, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--surface-2)", borderRadius: "var(--radius-sm)", border: "1px dashed var(--border)" }}>
-                <p style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>Loading image...</p>
-              </div>
-            ) : menuImageUrl ? (
-              <div style={{ flexShrink: 0, position: "relative", minWidth: 150, maxWidth: 300 }}>
-                <div style={{ fontWeight: 600, fontSize: "0.85rem", marginBottom: "0.5rem", color: "var(--text-secondary)" }}>Current Photo:</div>
-                <img src={menuImageUrl} alt="Mess Menu" style={{ width: "100%", maxHeight: 400, objectFit: "contain", borderRadius: "var(--radius-sm)", border: "1px solid var(--border)", background: "var(--surface-0)" }} />
-                <button 
-                  onClick={removeImage}
-                  disabled={uploading}
-                  style={{
-                    position: "absolute", top: 25, right: -10, background: "#f87171", color: "white",
-                    border: "none", borderRadius: "50%", width: 24, height: 24, cursor: "pointer",
-                    display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.8rem", boxShadow: "0 2px 5px rgba(0,0,0,0.2)"
-                  }}
-                  title="Remove Image"
-                >✕</button>
-              </div>
-            ) : (
-              <div style={{ width: 200, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--surface-2)", borderRadius: "var(--radius-sm)", border: "1px dashed var(--border)", padding: "1rem" }}>
-                <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", textAlign: "center" }}>No image uploaded yet. Please upload one.</p>
+            {menuImageUrl && (
+              <div style={{ position: "relative" }}>
+                <img src={menuImageUrl} alt="Menu" style={{ width: "240px", height: "180px", objectFit: "cover", borderRadius: "var(--radius-md)", border: "1px solid var(--border)", boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }} />
+                <button onClick={() => setMenuImageUrl("")} style={{ position: "absolute", top: -12, right: -12, background: "var(--brand-error)", color: "#fff", border: "none", borderRadius: "50%", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }}><FiX /></button>
               </div>
             )}
           </div>
         </section>
 
-
-        {/* Section 2: Daily Text Menu */}
-        <section style={{ background: "var(--surface-1)", border: "1px solid var(--border)", borderRadius: "var(--radius-lg)", padding: "2rem" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "1rem", marginBottom: "1.5rem" }}>
-            <div>
-              <h2 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "0.5rem" }}>Today&apos;s Menu</h2>
-              <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem" }}>
-                Update the specific food items for any day.
-              </p>
+        {/* Daily Menu Items */}
+        <section className="card">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2.5rem" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+              <div style={{ width: 48, height: 48, background: "rgba(99, 102, 241, 0.1)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--brand-primary)" }}>
+                <FiClipboard style={{ fontSize: "1.5rem" }} />
+              </div>
+              <div>
+                <h2 style={{ fontSize: "1.25rem", fontWeight: 800, color: "#fff" }}>Daily Meal Details</h2>
+                <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem" }}>Update what&apos;s being served on a specific day.</p>
+              </div>
             </div>
-            <div>
-              <input type="date" className="field-input" value={date} onChange={e => setDate(e.target.value)} 
-                style={{ width: "auto", padding: "0.5rem 1rem", fontWeight: 600 }} />
+            <div style={{ position: "relative" }}>
+              <FiCalendar style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)", pointerEvents: "none" }} />
+              <input type="date" className="field-input" value={date} onChange={e => setDate(e.target.value)} style={{ width: "180px", paddingLeft: "3rem" }} />
             </div>
           </div>
 
-          {loadingMenu ? (
-            <p style={{ color: "var(--text-muted)", textAlign: "center", padding: "2rem" }}>Loading menu for {date}...</p>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-              {items.map((item, index) => (
-                <div key={index} style={{ display: "flex", gap: "1rem", alignItems: "flex-start", background: "var(--surface-2)", padding: "1rem", borderRadius: "var(--radius-md)", border: "1px solid var(--border)" }}>
-                  <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                    <div>
-                      <label className="field-label" style={{ fontSize: "0.75rem" }}>Meal Name</label>
-                      <input className="field-input" placeholder="e.g. Breakfast, Snacks" value={item.mealName} onChange={e => updateItem(index, "mealName", e.target.value)} />
+          <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+            {loadingMenu ? (
+              <div style={{ textAlign: "center", padding: "3rem" }}><span className="spinner" /></div>
+            ) : (
+              <>
+                {items.map((item, idx) => (
+                  <div key={idx} style={{ background: "var(--surface-2)", padding: "1.5rem", borderRadius: "var(--radius-md)", border: "1px solid var(--border)", display: "flex", gap: "1.5rem", alignItems: "flex-end" }} className="animate-fade-up">
+                    <div style={{ width: "160px" }}>
+                      <label className="field-label" style={{ fontSize: "0.75rem" }}>Meal Type</label>
+                      <input className="field-input" value={item.mealName} onChange={e => { const n = [...items]; n[idx].mealName = e.target.value; setItems(n); }} placeholder="e.g. Lunch" />
                     </div>
-                    <div>
-                      <label className="field-label" style={{ fontSize: "0.75rem" }}>Items</label>
-                      <input className="field-input" placeholder="e.g. Aloo Paratha, Dahi" value={item.description} onChange={e => updateItem(index, "description", e.target.value)} />
+                    <div style={{ flex: 1 }}>
+                      <label className="field-label" style={{ fontSize: "0.75rem" }}>What&apos;s on the menu?</label>
+                      <input className="field-input" value={item.description} onChange={e => { const n = [...items]; n[idx].description = e.target.value; setItems(n); }} placeholder="e.g. Aloo Matar, Dal Tadka, Rice, 4 Rotis" />
                     </div>
+                    <button onClick={() => setItems(items.filter((_, i) => i !== idx))} style={{ background: "rgba(239, 68, 68, 0.1)", border: "none", color: "var(--brand-error)", width: 44, height: 44, borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = "rgba(239, 68, 68, 0.2)"} onMouseLeave={e => e.currentTarget.style.background = "rgba(239, 68, 68, 0.1)"}><FiTrash2 /></button>
                   </div>
-                  <button onClick={() => removeItem(index)} style={{ background: "none", border: "none", color: "#f87171", cursor: "pointer", fontSize: "1.2rem", padding: "0.5rem", marginTop: "1.2rem" }}>
-                    ✕
-                  </button>
-                </div>
-              ))}
-
-              <button onClick={addMealField} style={{ background: "none", border: "2px dashed var(--border)", borderRadius: "var(--radius-sm)", padding: "1rem", color: "var(--text-secondary)", fontWeight: 600, cursor: "pointer", transition: "all 0.2s" }}>
-                + Add another meal (e.g. Snacks)
-              </button>
-
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "1rem" }}>
-                <span style={{ fontSize: "0.9rem", fontWeight: 600, color: menuMsg.includes("✅") ? "#34d399" : "#f87171" }}>
-                  {menuMsg}
-                </span>
-                <button className="btn-primary" onClick={saveDailyMenu} disabled={savingMenu} style={{ width: "auto", padding: "0.75rem 2rem" }}>
-                  {savingMenu ? "Saving..." : "Save Daily Menu"}
+                ))}
+                
+                <button onClick={() => setItems([...items, { mealName: "", description: "" }])} style={{ 
+                  width: "100%", padding: "1.25rem", background: "transparent", border: "2px dashed var(--border)", 
+                  borderRadius: "var(--radius-md)", color: "var(--text-muted)", fontWeight: 700, fontSize: "0.95rem",
+                  cursor: "pointer", transition: "all 0.2s", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem"
+                }} onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--brand-primary)"; e.currentTarget.style.color = "#fff"; }} onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-muted)"; }}>
+                  <FiPlus /> Add Another Meal Category
                 </button>
-              </div>
-            </div>
-          )}
+              </>
+            )}
+          </div>
         </section>
 
-      </main>
+      </div>
     </div>
   );
 }

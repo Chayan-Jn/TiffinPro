@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "react-hot-toast";
 import Script from "next/script";
 
 declare global {
@@ -39,6 +40,8 @@ export default function ProviderSubscriptionPage() {
   };
 
   const isExpired = expiry ? expiry < new Date() : true;
+  const hasPaid = history.some(h => h.status === "paid");
+  const isActiveTrial = !isExpired && !hasPaid;
 
   const handlePayment = async (plan: "monthly" | "yearly") => {
     setPayingPlan(plan);
@@ -72,11 +75,11 @@ export default function ProviderSubscriptionPage() {
           });
           const verifyData = await verifyRes.json();
           if (verifyData.success) {
-            alert("Payment successful! Your subscription has been renewed.");
+            toast.success("Payment successful! Your subscription has been renewed.");
             fetchData();
             router.push("/provider/dashboard");
           } else {
-            alert("Payment verification failed.");
+            toast.error("Payment verification failed.");
           }
         },
         theme: {
@@ -86,11 +89,11 @@ export default function ProviderSubscriptionPage() {
 
       const rzp1 = new window.Razorpay(options);
       rzp1.on("payment.failed", function (response: any) {
-        alert(`Payment Failed: ${response.error.description}`);
+        toast.error(`Payment Failed: ${response.error.description}`);
       });
       rzp1.open();
     } catch (err: any) {
-      alert(err.message);
+      toast.error(err.message);
     } finally {
       setPayingPlan(null);
     }
@@ -123,8 +126,9 @@ export default function ProviderSubscriptionPage() {
                 alignItems: "center"
               }}>
                 <div>
-                  <div style={{ fontSize: "1.2rem", fontWeight: 800, color: isExpired ? "#f87171" : "#10b981", marginBottom: "0.25rem" }}>
-                    {isExpired ? "Subscription Expired" : "Subscription Active"}
+                  <div style={{ fontSize: "1.2rem", fontWeight: 800, color: isExpired ? "#f87171" : "#10b981", marginBottom: "0.25rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    {isExpired ? "Subscription Expired" : isActiveTrial ? "7-Day Free Trial Active" : "Subscription Active"}
+                    {isActiveTrial && <span style={{ background: "rgba(16,185,129,0.2)", padding: "2px 8px", borderRadius: 20, fontSize: "0.7rem", fontWeight: 800, textTransform: "uppercase" }}>Trial</span>}
                   </div>
                   <div style={{ color: "var(--text-secondary)" }}>
                     {expiry ? (
@@ -184,7 +188,7 @@ export default function ProviderSubscriptionPage() {
                     disabled={payingPlan !== null}
                     onClick={() => handlePayment("yearly")}
                     className="btn-primary" 
-                    style={{ marginTop: "auto", background: "var(--brand-orange)" }}
+                    style={{ marginTop: "auto", background: "var(--brand-primary)" }}
                   >
                     {payingPlan === "yearly" ? "Processing..." : "Subscribe Yearly"}
                   </button>

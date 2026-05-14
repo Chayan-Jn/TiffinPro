@@ -1,6 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { 
+  LuTruck, LuChevronLeft, LuCheckCircle2, LuXCircle, 
+  LuMinus, LuPlus, LuHistory, LuCalendar, LuChefHat,
+  LuCircleCheck, LuCircleX, LuRotateCcw
+} from "react-icons/lu";
 import { useRouter } from "next/navigation";
 
 interface DeliveryCustomer {
@@ -21,7 +26,7 @@ export default function ProviderDeliveriesPage() {
     return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
   });
   
-  const [meal, setMeal] = useState("Lunch"); // Default. Could be dynamic based on settings later.
+  const [meal, setMeal] = useState("Lunch"); 
   const [deliveries, setDeliveries] = useState<DeliveryCustomer[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
@@ -64,7 +69,6 @@ export default function ProviderDeliveriesPage() {
 
       setMsg(`✅ ${data.message}`);
       
-      // Update local state
       setDeliveries(prev => prev.map(d => 
         customerIds.includes(d.customerId) ? { ...d, status: status as any } : d
       ));
@@ -83,14 +87,11 @@ export default function ProviderDeliveriesPage() {
   };
 
   const pendingCount = deliveries.filter(d => d.status === "pending").length;
-  const deliveredCount = deliveries.filter(d => d.status === "delivered").length;
-  
   const totalTiffins = deliveries.reduce((sum, d) => sum + (d.status === "cancelled" ? 0 : (d.quantity ?? 1)), 0);
 
   async function adjustQuantity(customerId: string, newQuantity: number) {
     if (newQuantity < 0) return;
     setUpdating(true);
-    setMsg("");
     try {
       const res = await fetch("/api/provider/deliveries/adjust", {
         method: "POST",
@@ -115,146 +116,108 @@ export default function ProviderDeliveriesPage() {
   }
 
   return (
-    <div style={{ minHeight: "100dvh", background: "var(--surface-0)" }}>
-      {/* Nav */}
-      <nav style={{
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "1rem 2rem", borderBottom: "1px solid var(--border)",
-        background: "var(--surface-1)", position: "sticky", top: 0, zIndex: 10,
-      }}>
+    <div style={{ minHeight: "100%" }}>
+      {/* Top bar */}
+      <div className="top-bar">
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-          <button onClick={() => router.push("/provider/dashboard")}
-            style={{ background: "none", border: "none", color: "var(--text-secondary)", cursor: "pointer", fontSize: "0.9rem" }}>
-            ← Dashboard
-          </button>
-          <span style={{ color: "var(--border)" }}>|</span>
-          <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>Deliveries</span>
+          <h1 style={{ fontSize: "1.1rem", fontWeight: 900, color: "var(--t1)", letterSpacing: "-0.02em" }}>
+            Daily Deliveries
+          </h1>
         </div>
-      </nav>
+        <div style={{ display: "flex", gap: "0.75rem" }}>
+          <button className="btn btn-accent" onClick={markAllDelivered} disabled={updating || pendingCount === 0} style={{ fontSize: "0.82rem", padding: "0.5rem 1rem", gap: "0.5rem" }}>
+            <LuCircleCheck /> Mark All Delivered ({pendingCount})
+          </button>
+        </div>
+      </div>
 
-      <main style={{ padding: "2rem", maxWidth: 900, margin: "0 auto", display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+      <div style={{ padding: "1.75rem", maxWidth: "1000px" }}>
         
-        {/* Controls */}
-        <div style={{ background: "var(--surface-1)", border: "1px solid var(--border)", borderRadius: "var(--radius-lg)", padding: "1.5rem", display: "flex", flexWrap: "wrap", gap: "1.5rem", alignItems: "center", justifyContent: "space-between" }}>
-          
-          <div style={{ display: "flex", gap: "1rem", alignItems: "center", flexWrap: "wrap" }}>
-            <div>
-              <label className="field-label" style={{ fontSize: "0.75rem", marginBottom: "0.2rem" }}>Date</label>
-              <input type="date" className="field-input" value={date} onChange={e => setDate(e.target.value)} style={{ width: "auto", padding: "0.5rem 1rem", fontWeight: 600 }} />
+        {/* Controls Bar */}
+        <div style={{ background: "var(--s1)", border: "1px solid var(--bd2)", borderRadius: "var(--r3)", padding: "1.25rem", display: "flex", flexWrap: "wrap", gap: "1.5rem", alignItems: "center", justifyContent: "space-between", marginBottom: "1.5rem" }}>
+          <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+            <div style={{ position: "relative" }}>
+              <label className="lbl" style={{ fontSize: "0.65rem", marginBottom: "0.2rem" }}>Service Date</label>
+              <div style={{ position: "relative" }}>
+                <LuCalendar style={{ position: "absolute", left: "0.75rem", top: "50%", transform: "translateY(-50%)", color: "var(--t3)", pointerEvents: "none" }} />
+                <input type="date" className="inp" value={date} onChange={e => setDate(e.target.value)} style={{ width: "auto", paddingLeft: "2.25rem", fontSize: "0.85rem", height: "38px" }} />
+              </div>
             </div>
 
             <div>
-              <label className="field-label" style={{ fontSize: "0.75rem", marginBottom: "0.2rem" }}>Meal</label>
-              <select className="field-input" value={meal} onChange={e => setMeal(e.target.value)} style={{ width: "auto", padding: "0.5rem 1rem", fontWeight: 600 }}>
-                {commonMeals.map(m => (
-                  <option key={m} value={m}>{m}</option>
-                ))}
+              <label className="lbl" style={{ fontSize: "0.65rem", marginBottom: "0.2rem" }}>Select Meal</label>
+              <select className="inp" value={meal} onChange={e => setMeal(e.target.value)} style={{ width: "auto", fontSize: "0.85rem", height: "38px" }}>
+                {commonMeals.map(m => <option key={m} value={m}>{m}</option>)}
               </select>
             </div>
           </div>
 
-          <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-            <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase" }}>Tiffins to Cook</div>
-              <div style={{ fontSize: "1.2rem", fontWeight: 800, color: "var(--brand-orange)" }}>{totalTiffins}</div>
-            </div>
-            <div style={{ width: 1, height: 30, background: "var(--border)" }}></div>
-            <button className="btn-primary" onClick={markAllDelivered} disabled={updating || pendingCount === 0} style={{ width: "auto", padding: "0.75rem 1.5rem" }}>
-              ✅ Mark {pendingCount} Delivered
-            </button>
+          <div style={{ textAlign: "right", background: "var(--s2)", padding: "0.5rem 1.25rem", borderRadius: "var(--r2)", border: "1px solid var(--bd2)" }}>
+            <div style={{ fontSize: "0.65rem", color: "var(--t3)", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em" }}>Total Tiffins</div>
+            <div style={{ fontSize: "1.4rem", fontWeight: 900, color: "var(--accent)" }}>{totalTiffins}</div>
           </div>
         </div>
 
-        {/* Message */}
-        {msg && <div style={{ textAlign: "center", fontWeight: 600, color: msg.includes("✅") ? "#34d399" : "#f87171" }}>{msg}</div>}
-
         {/* List */}
         {loading ? (
-          <p style={{ color: "var(--text-muted)", textAlign: "center", padding: "3rem" }}>Loading deliveries...</p>
+          <div style={{ textAlign: "center", padding: "5rem" }}><span className="spin" /></div>
         ) : deliveries.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "4rem 2rem", color: "var(--text-muted)" }}>
-            <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🍽️</div>
-            <p style={{ fontSize: "1rem" }}>No active customers scheduled for {meal} on this date.</p>
+          <div style={{ textAlign: "center", padding: "5rem 2rem", background: "var(--s1)", border: "1px solid var(--bd2)", borderRadius: "var(--r3)" }}>
+            <LuChefHat style={{ fontSize: "3.5rem", color: "var(--bd)", marginBottom: "1.5rem" }} />
+            <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--t1)", marginBottom: "0.5rem" }}>No deliveries scheduled</h3>
+            <p style={{ color: "var(--t3)", fontSize: "0.9rem" }}>There are no active customers for {meal} on this date.</p>
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
             {deliveries.map(d => (
               <div key={d.customerId} style={{
-                background: "var(--surface-1)", border: "1px solid var(--border)",
-                borderRadius: "var(--radius-md)", padding: "1rem 1.5rem",
-                display: "flex", alignItems: "center", justifyContent: "space-between",
-                gap: "1rem", transition: "all 0.2s",
-                borderColor: d.status === "delivered" ? "rgba(52,211,153,0.3)" : "var(--border)"
+                background: "var(--s1)", border: "1px solid var(--bd2)", borderRadius: "var(--r2)", padding: "1rem 1.5rem",
+                display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem",
+                borderColor: d.status === "delivered" ? "rgba(34,197,94,0.3)" : "var(--bd2)"
               }}>
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: "1rem", color: "var(--text-primary)", display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                  <div style={{ fontWeight: 800, fontSize: "1rem", color: "var(--t1)", display: "flex", gap: "0.6rem", alignItems: "center" }}>
                     {d.displayName}
-                    {d.quantity === 0 && <span style={{ background: "rgba(248,113,113,0.1)", color: "#f87171", padding: "2px 6px", borderRadius: 4, fontSize: "0.65rem", fontWeight: 800 }}>SKIPPED</span>}
-                    {(d.quantity ?? 1) > 1 && <span style={{ background: "rgba(249,115,22,0.1)", color: "var(--brand-orange)", padding: "2px 6px", borderRadius: 4, fontSize: "0.65rem", fontWeight: 800 }}>+{(d.quantity ?? 1) - 1} EXTRA</span>}
+                    {d.status === "cancelled" && <span style={{ background: "rgba(239,68,68,0.1)", color: "var(--red)", padding: "1px 6px", borderRadius: 4, fontSize: "0.6rem", fontWeight: 800 }}>SKIPPED</span>}
+                    {(d.quantity ?? 1) > 1 && <span style={{ background: "rgba(255,69,0,0.1)", color: "var(--accent)", padding: "1px 6px", borderRadius: 4, fontSize: "0.6rem", fontWeight: 800 }}>+{(d.quantity ?? 1) - 1} EXTRA</span>}
                   </div>
-                  {d.phone && <div style={{ color: "var(--text-secondary)", fontSize: "0.8rem", marginTop: "0.2rem" }}>📞 {d.phone}</div>}
+                  {d.phone && <div style={{ color: "var(--t3)", fontSize: "0.8rem", marginTop: "0.15rem" }}>{d.phone}</div>}
                 </div>
                 
-                <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                  
-                  {/* Quantity Adjuster */}
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", background: "var(--surface-0)", padding: "0.25rem", borderRadius: "var(--radius-md)", border: "1px solid var(--border)" }}>
-                    <button 
-                      disabled={updating || (d.quantity ?? 1) === 0}
-                      onClick={() => adjustQuantity(d.customerId, (d.quantity ?? 1) - 1)}
-                      style={{ width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--surface-1)", border: "none", borderRadius: 4, fontWeight: 800, color: "var(--text-secondary)", cursor: "pointer" }}
-                    >-</button>
-                    <span style={{ fontWeight: 800, width: "1.2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--text-primary)" }}>{d.quantity ?? 1}</span>
-                    <button 
-                      disabled={updating}
-                      onClick={() => adjustQuantity(d.customerId, (d.quantity ?? 1) + 1)}
-                      style={{ width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--surface-1)", border: "none", borderRadius: 4, fontWeight: 800, color: "var(--text-secondary)", cursor: "pointer" }}
-                    >+</button>
+                <div style={{ display: "flex", alignItems: "center", gap: "1.25rem" }}>
+                  {/* Quantity */}
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", background: "var(--s2)", padding: "0.3rem", borderRadius: "var(--r1)", border: "1px solid var(--bd2)" }}>
+                    <button disabled={updating || (d.quantity ?? 1) === 0} onClick={() => adjustQuantity(d.customerId, (d.quantity ?? 1) - 1)} className="btn-icon" style={{ width: 22, height: 22, background: "var(--s1)" }}><LuMinus /></button>
+                    <span style={{ fontWeight: 900, width: "1rem", textAlign: "center", fontSize: "0.85rem", color: "var(--t1)" }}>{d.quantity ?? 1}</span>
+                    <button disabled={updating} onClick={() => adjustQuantity(d.customerId, (d.quantity ?? 1) + 1)} className="btn-icon" style={{ width: 22, height: 22, background: "var(--s1)" }}><LuPlus /></button>
                   </div>
 
-                  {d.status === "pending" && (d.quantity ?? 1) > 0 && (
-                    <>
-                      <button onClick={() => updateStatus([d.customerId], "delivered")} disabled={updating}
-                        style={{ background: "rgba(52,211,153,0.1)", color: "#10b981", border: "1px solid rgba(52,211,153,0.3)", borderRadius: 6, padding: "0.4rem 0.8rem", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer" }}>
-                        ✅ Mark Delivered
+                  {d.status === "pending" && (d.quantity ?? 1) > 0 ? (
+                    <div style={{ display: "flex", gap: "0.5rem" }}>
+                      <button onClick={() => updateStatus([d.customerId], "delivered")} disabled={updating} className="btn btn-ghost" style={{ fontSize: "0.75rem", color: "var(--green)", border: "1px solid rgba(34,197,94,0.2)" }}>
+                        <LuCircleCheck /> Delivered
                       </button>
-                      <button onClick={() => updateStatus([d.customerId], "cancelled")} disabled={updating}
-                        style={{ background: "transparent", color: "#f87171", border: "1px solid rgba(248,113,113,0.3)", borderRadius: 6, padding: "0.4rem 0.8rem", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer" }}>
-                        <span style={{ fontSize: "0.8rem" }}>Cancel</span>
+                      <button onClick={() => updateStatus([d.customerId], "cancelled")} disabled={updating} className="btn btn-ghost" style={{ fontSize: "0.75rem", color: "var(--red)" }}>
+                        <LuCircleX /> Skip
                       </button>
-                    </>
-                  )}
-
-                  {d.status === "cancelled" && (d.quantity ?? 1) === 0 && (
-                    <span style={{ color: "#f87171", fontSize: "0.8rem", fontWeight: 700, marginRight: "0.5rem" }}>CANCELLED</span>
-                  )}
-
-                  {d.status === "delivered" && (
-                    <>
-                      <span style={{ color: "#34d399", fontSize: "0.8rem", fontWeight: 700, marginRight: "0.5rem" }}>DELIVERED</span>
-                      <button onClick={() => updateStatus([d.customerId], "pending")} disabled={updating}
-                        style={{ background: "transparent", color: "var(--text-muted)", border: "1px solid var(--border)", borderRadius: 6, padding: "0.3rem 0.6rem", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer" }}>
-                        ↩ Undo
-                      </button>
-                    </>
-                  )}
-
-                  {d.status === "cancelled" && (
-                    <>
-                      <span style={{ color: "#f87171", fontSize: "0.8rem", fontWeight: 700, marginRight: "0.5rem" }}>CANCELLED</span>
-                      <button onClick={() => updateStatus([d.customerId], "pending")} disabled={updating}
-                        style={{ background: "transparent", color: "var(--text-muted)", border: "1px solid var(--border)", borderRadius: 6, padding: "0.3rem 0.6rem", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer" }}>
-                        ↩ Undo
-                      </button>
-                    </>
-                  )}
+                    </div>
+                  ) : d.status === "delivered" ? (
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                      <span style={{ color: "var(--green)", fontSize: "0.75rem", fontWeight: 800, display: "flex", alignItems: "center", gap: "0.3rem" }}><LuCircleCheck /> DELIVERED</span>
+                      <button onClick={() => updateStatus([d.customerId], "pending")} disabled={updating} className="btn-icon" title="Undo"><LuRotateCcw /></button>
+                    </div>
+                  ) : d.status === "cancelled" ? (
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                      <span style={{ color: "var(--red)", fontSize: "0.75rem", fontWeight: 800, display: "flex", alignItems: "center", gap: "0.3rem" }}><LuCircleX /> SKIPPED</span>
+                      <button onClick={() => updateStatus([d.customerId], "pending")} disabled={updating} className="btn-icon" title="Undo"><LuRotateCcw /></button>
+                    </div>
+                  ) : null}
                 </div>
               </div>
             ))}
           </div>
         )}
-
-      </main>
+      </div>
     </div>
   );
 }
